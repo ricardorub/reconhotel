@@ -1,13 +1,6 @@
 package View;
 
-import com.mysql.cj.jdbc.result.ResultSetMetaData;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.Vector;
+
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
