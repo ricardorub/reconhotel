@@ -4,7 +4,7 @@
  */
 package Controller;
 
-import General.Admin; // Import the Admin class
+// import General.Admin; // Not directly used in this controller logic after refactor, can be removed if not needed elsewhere by Admin specific logic
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
@@ -13,6 +13,7 @@ import java.sql.ResultSet;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
+import org.mindrot.jbcrypt.BCrypt; // Import BCrypt
 
 public class ControllerAdmin {
 
@@ -33,23 +34,20 @@ public class ControllerAdmin {
             if (this.dbDriver != null && !this.dbDriver.isEmpty()) {
                 Class.forName(this.dbDriver);
             } else {
-                System.err.println("Database driver not specified in project.properties.");
+                System.err.println("Database driver not specified in project.properties for ControllerAdmin.");
                  this.dbUrl = null; // Prevent further operations if driver is missing
             }
         } catch (IOException e) {
-            System.err.println("Error loading database configuration: " + e.getMessage());
+            System.err.println("Error loading database configuration for ControllerAdmin: " + e.getMessage());
             this.dbUrl = null; 
         } catch (ClassNotFoundException e) {
-            System.err.println("MySQL JDBC Driver not found: " + e.getMessage());
+            System.err.println("MySQL JDBC Driver not found for ControllerAdmin: " + e.getMessage());
             this.dbUrl = null; 
-            // Consider re-throwing as a RuntimeException if this is a critical failure
-            // throw new RuntimeException("JDBC Driver not found, application cannot start.", e);
         }
     }
 
     /**
-     * Registers a new admin user.
-     * Stores password in plain text.
+     * Registers a new admin user with a hashed password.
      *
      * @param username The desired username for the new admin.
      * @param plainPassword The plain-text password for the new admin.
@@ -66,28 +64,25 @@ public class ControllerAdmin {
         if (username == null || username.trim().isEmpty() || 
             plainPassword == null || plainPassword.isEmpty() ||
             email == null || email.trim().isEmpty()) {
-            System.err.println("Username, password, or email cannot be empty.");
-            // Optionally, add more specific validation for email format, password complexity (if desired later)
+            System.err.println("Username, password, or email cannot be empty for admin registration.");
             return false;
         }
 
-        // 1. Check if user (username or email) already exists
         if (adminExists(username, email)) {
-            // adminExists method will print the specific reason (username or email)
             return false;
         }
 
-        // 2. Store the new admin in the database (password in plain text)
-        // The column name in the database for the password is 'password_hash', 
-        // but we are storing plain text in it as per user request.
-        // It should ideally be named 'password' if storing plain text.
+        // The column name in the database for the password is 'password_hash'.
+        // This is appropriate now as we are storing a hash.
         String sql = "INSERT INTO admin (username, password_hash, email, security_question, answer, status) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
+            String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
+
             pstmt.setString(1, username);
-            pstmt.setString(2, plainPassword); // Storing plain password
+            pstmt.setString(2, hashedPassword); // Storing hashed password
             pstmt.setString(3, email);
             pstmt.setString(4, securityQuestion);
             pstmt.setString(5, answer);
@@ -105,7 +100,6 @@ public class ControllerAdmin {
 
         } catch (SQLException e) {
             System.err.println("Database error during admin registration for '" + username + "': " + e.getMessage());
-            // e.printStackTrace(); 
             return false;
         }
     }
@@ -119,9 +113,8 @@ public class ControllerAdmin {
     private boolean adminExists(String username, String email) {
         if (dbUrl == null) {
             System.err.println("Database configuration not loaded. Cannot check if admin exists.");
-            return true; // Safer to assume exists if DB is not configured
+            return true; 
         }
-        // Check for username OR email.
         String sql = "SELECT id FROM admin WHERE username = ? OR email = ?";
         try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -130,15 +123,50 @@ public class ControllerAdmin {
             pstmt.setString(2, email);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    // Could add logic here to see if it was username or email if needed for a more specific message
                     System.err.println("Admin user with username '" + username + "' or email '" + email + "' already exists.");
                     return true; 
                 }
-                return false; // No user found with that username or email
+                return false; 
             }
         } catch (SQLException e) {
             System.err.println("Database error checking if admin '" + username + "/" + email + "' exists: " + e.getMessage());
-            return true; // Safer to assume exists on DB error to prevent duplicates
+            return true; 
+        }
+    }
+
+    /**
+     * Verifies an admin's plain-text password against the stored hash.
+     *
+     * @param username Admin's username.
+     * @param plainPassword The plain-text password to verify.
+     * @return True if the password matches, false otherwise.
+     */
+    public boolean verificarPasswordAdmin(String username, String plainPassword) {
+        if (dbUrl == null) {
+            System.err.println("Database configuration not loaded. Cannot verify admin password.");
+            return false;
+        }
+        // Assuming login is by username for admins
+        String sql = "SELECT password_hash FROM admin WHERE username = ?";
+        try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, username);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String storedHash = rs.getString("password_hash");
+                    if (storedHash == null || storedHash.isEmpty()) {
+                        System.err.println("Admin '" + username + "' has no password set or password_hash is empty.");
+                        return false; // Or handle as an error
+                    }
+                    return BCrypt.checkpw(plainPassword, storedHash);
+                }
+                System.err.println("Admin user '" + username + "' not found for password verification.");
+                return false; // Admin not found
+            }
+        } catch (SQLException e) {
+            System.err.println("Database error during admin password verification for '" + username + "': " + e.getMessage());
+            return false; 
         }
     }
     
@@ -150,63 +178,59 @@ public class ControllerAdmin {
              System.err.println("DB Config not loaded. Tests will fail. Check nbproject/project.properties path and content, and MySQL Connector JAR.");
              return;
         }
-        System.out.println("DB URL: " + controller.dbUrl);
-        System.out.println("DB User: " + controller.dbUser);
-        // System.out.println("DB Password: " + controller.dbPassword); // Don't print password generally
-        System.out.println("DB Driver: " + controller.dbDriver);
-
+        System.out.println("ControllerAdmin - DB URL: " + controller.dbUrl);
+        System.out.println("ControllerAdmin - DB User: " + controller.dbUser);
+        System.out.println("ControllerAdmin - DB Driver: " + controller.dbDriver);
 
         // Test Case 1: Register a new admin
-        System.out.println("\n--- Test Case 1: Register New Admin ---");
-        boolean success1 = controller.registrarAdmin("testUser1", "password123", "test1@example.com", "Fav color?", "Blue");
+        String testAdminUser = "testAdminBCrypt";
+        String testAdminPass = "securePassword123";
+        String testAdminEmail = "testadminbcrypt@example.com";
+
+        System.out.println("\n--- ControllerAdmin Test Case 1: Register New Admin with BCrypt ---");
+        boolean success1 = controller.registrarAdmin(testAdminUser, testAdminPass, testAdminEmail, "Fav IDE?", "NetBeans");
         if (success1) {
-            System.out.println("Test Case 1: Registration successful for testUser1.");
+            System.out.println("Test Case 1: Registration successful for " + testAdminUser);
         } else {
-            System.out.println("Test Case 1: Registration failed for testUser1.");
+            System.out.println("Test Case 1: Registration failed for " + testAdminUser);
         }
 
-        // Test Case 2: Try to register the same admin (should fail due to username)
-        System.out.println("\n--- Test Case 2: Register Duplicate Username ---");
-        boolean success2 = controller.registrarAdmin("testUser1", "password456", "test2@example.com", "Fav pet?", "Dog");
-        if (!success2) {
-            System.out.println("Test Case 2: Correctly failed to register duplicate username 'testUser1'.");
+        // Test Case 2: Verify correct password for the new admin
+        System.out.println("\n--- ControllerAdmin Test Case 2: Verify Correct Password ---");
+        if (success1) { // Only try to verify if registration was potentially successful
+            boolean passVerify1 = controller.verificarPasswordAdmin(testAdminUser, testAdminPass);
+            if (passVerify1) {
+                System.out.println("Test Case 2: Password verification successful for " + testAdminUser);
+            } else {
+                System.out.println("Test Case 2: Password verification FAILED for " + testAdminUser);
+            }
         } else {
-            System.out.println("Test Case 2: INCORRECTLY registered duplicate username 'testUser1'.");
+            System.out.println("Test Case 2: Skipped password verification due to registration failure.");
         }
 
-        // Test Case 3: Try to register with existing email (should fail due to email)
-        System.out.println("\n--- Test Case 3: Register Duplicate Email ---");
-        boolean success3 = controller.registrarAdmin("testUser3", "password789", "test1@example.com", "Fav food?", "Pizza");
-        if (!success3) {
-            System.out.println("Test Case 3: Correctly failed to register duplicate email 'test1@example.com'.");
+        // Test Case 3: Verify incorrect password for the new admin
+        System.out.println("\n--- ControllerAdmin Test Case 3: Verify Incorrect Password ---");
+        if (success1) {
+            boolean passVerify2 = controller.verificarPasswordAdmin(testAdminUser, "wrongPassword");
+            if (!passVerify2) {
+                System.out.println("Test Case 3: Correctly failed to verify incorrect password for " + testAdminUser);
+            } else {
+                System.out.println("Test Case 3: INCORRECTLY verified incorrect password for " + testAdminUser);
+            }
         } else {
-            System.out.println("Test Case 3: INCORRECTLY registered duplicate email 'test1@example.com'.");
+            System.out.println("Test Case 3: Skipped incorrect password verification due to registration failure.");
         }
         
-        // Test Case 4: Register another new admin
-        System.out.println("\n--- Test Case 4: Register Second New Admin ---");
-        boolean success4 = controller.registrarAdmin("testUser2", "securePass", "test2unique@example.com", "City of birth?", "New York");
-        if (success4) {
-            System.out.println("Test Case 4: Registration successful for testUser2.");
+        // Test Case 4: Try to register the same admin username (should fail)
+        System.out.println("\n--- ControllerAdmin Test Case 4: Register Duplicate Username ---");
+        boolean success4 = controller.registrarAdmin(testAdminUser, "anotherPass", "anotheremail@example.com", "Q", "A");
+        if (!success4) {
+            System.out.println("Test Case 4: Correctly failed to register duplicate username '" + testAdminUser + "'.");
         } else {
-            System.out.println("Test Case 4: Registration failed for testUser2.");
-        }
-        
-        // Test Case 5: Register with empty username (should fail)
-        System.out.println("\n--- Test Case 5: Register Empty Username ---");
-        boolean success5 = controller.registrarAdmin("", "password", "emptyuser@example.com", "Q", "A");
-        if (!success5) {
-            System.out.println("Test Case 5: Correctly failed to register empty username.");
-        } else {
-            System.out.println("Test Case 5: INCORRECTLY registered empty username.");
+            System.out.println("Test Case 4: INCORRECTLY registered duplicate username '" + testAdminUser + "'.");
         }
 
-        // Note: To run these tests effectively, you might want to clear the 'admin' table before each full test run
-        // or use unique usernames/emails for each test that expects success.
-        System.out.println("\nControllerRegistro main method testing complete. Check database for results.");
-        System.out.println("Remember to have your MySQL server running and the 'hotel' database with 'admin' table created.");
-        System.out.println("The 'admin' table should have columns: id, username, password_hash (stores plain pass), email, security_question, answer, status.");
+        System.out.println("\nControllerAdmin BCrypt testing complete. Check 'admin' table in database for results (password_hash should be a BCrypt hash).");
+        System.out.println("Ensure the 'admin' table's 'password_hash' column is long enough for BCrypt hashes (e.g., VARCHAR(60) or VARCHAR(72)).");
     }
 }
-
-

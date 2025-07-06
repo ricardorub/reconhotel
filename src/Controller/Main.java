@@ -1,12 +1,10 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package Controller;
+
+import View.SignIn; // Ensure this import is present
 
 /**
  *
- * @author Lenovo
+ * @author Lenovo (or other original author)
  */
 // Main.java
 // Main class to launch the application
@@ -23,4 +21,3 @@ public class Main {
         });
     }
 }
-

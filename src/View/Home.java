@@ -110,9 +110,10 @@ public class Home extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton5ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton5ActionPerformed
-       int yes=JOptionPane.showConfirmDialog(this, "Are you really Logout ?", "Logut",JOptionPane.YES_NO_OPTION);
+       int yes=JOptionPane.showConfirmDialog(this, "Are you really Logout ?", "Logout",JOptionPane.YES_NO_OPTION); // Corrected "Logut" to "Logout"
        if(JOptionPane.YES_OPTION==yes){
-            new SignIn().setVisible(true);          
+            new SignIn().setVisible(true);
+            dispose(); // Close the Home window
        }
     }//GEN-LAST:event_jButton5ActionPerformed
 

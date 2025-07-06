@@ -1,10 +1,18 @@
 package View;
 
-
+import Controller.ControllerUser; // Import ControllerUser
+// import Controller.ControllerAdmin; // Only if admin login is also handled here
+import java.awt.event.KeyEvent; // For VK_ENTER
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+// Removed java.sql imports as they are no longer needed for basic login
+// import java.sql.PreparedStatement;
+// import java.sql.ResultSet;
+// import java.sql.DriverManager;
+// import java.sql.SQLException;
+
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -18,13 +26,83 @@ import javax.swing.JOptionPane;
 public class SignIn extends javax.swing.JFrame {
 
     int flag=0;
+    private ControllerUser controllerUser; // Instance of ControllerUser
+    // private ControllerAdmin controllerAdmin; // If handling admin login too
+
     /**
      * Creates new form SignIn
      */
     public SignIn() {
         initComponents();
         txtemail.requestFocus();
+        controllerUser = new ControllerUser();
+        // controllerAdmin = new ControllerAdmin(); // If handling admin login too
        }
+
+    private void performLogin() {
+        String email = txtemail.getText();
+        String password = new String(txtpassword.getPassword());
+
+        if (email.isEmpty() || password.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Email and Password are required.", "Error", JOptionPane.ERROR_MESSAGE);
+            txtemail.requestFocus();
+            return;
+        }
+
+        // Hardcoded admin check (remains as per original logic for View.Admin)
+        if (email.equalsIgnoreCase("admin") && password.equalsIgnoreCase("admin")) {
+            new Admin().setVisible(true); // This refers to View.Admin
+            dispose();
+            return;
+        }
+
+        // Attempt to login as a regular user
+        boolean passwordMatches = controllerUser.verificarPassword(email, password);
+
+        if (passwordMatches) {
+            // Password is correct, now check approval status (logic adapted from original)
+            // This status check ideally should be part of a more comprehensive user service
+            // For now, we'll query it directly after successful password verification.
+            // This part still uses direct JDBC as ControllerUser doesn't yet have a method for this.
+            // This should be refactored into ControllerUser later.
+            try {
+                Class.forName(controllerUser.getDbDriverProperty()); // Assuming ControllerUser can provide this
+                java.sql.Connection con = java.sql.DriverManager.getConnection(
+                    controllerUser.getDbUrlProperty(), 
+                    controllerUser.getDbUserProperty(), 
+                    controllerUser.getDbPasswordProperty()
+                );
+                java.sql.PreparedStatement pstCheckStatus = con.prepareStatement("SELECT status FROM signup WHERE email = ?");
+                pstCheckStatus.setString(1, email.toLowerCase());
+                java.sql.ResultSet rsStatus = pstCheckStatus.executeQuery();
+
+                if (rsStatus.next()) {
+                    String status = rsStatus.getString("status");
+                    if ("approved".equalsIgnoreCase(status)) {
+                        new Home().setVisible(true);
+                        dispose();
+                    } else {
+                        JOptionPane.showMessageDialog(this, "Login successful, but account is pending admin approval.", "Pending Approval", JOptionPane.INFORMATION_MESSAGE);
+                        txtemail.requestFocus();
+                    }
+                } else {
+                    // This case should ideally not happen if verificarPassword was true,
+                    // means user exists but somehow status couldn't be fetched.
+                     JOptionPane.showMessageDialog(this, "Login failed. User data inconsistent.", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+                if (rsStatus != null) rsStatus.close();
+                if (pstCheckStatus != null) pstCheckStatus.close();
+                if (con != null) con.close();
+            } catch (ClassNotFoundException | java.sql.SQLException ex) {
+                Logger.getLogger(SignIn.class.getName()).log(Level.SEVERE, null, ex);
+                JOptionPane.showMessageDialog(this, "Database error during status check.", "Error", JOptionPane.ERROR_MESSAGE);
+            }
+
+        } else {
+            JOptionPane.showMessageDialog(this, "Incorrect Email ID or Password.", "Login Failed", JOptionPane.WARNING_MESSAGE);
+            txtemail.requestFocus();
+        }
+    }
 
     /**
      * This method is called from within the constructor to initialize the form.
@@ -180,144 +258,53 @@ public class SignIn extends javax.swing.JFrame {
     }//GEN-LAST:event_txtemailActionPerformed
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-        if(txtemail.getText().equalsIgnoreCase("admin")&&txtpassword.getText().equalsIgnoreCase("admin")){
-           new Admin().setVisible(true);
-           dispose();
-        }
-        else{
-        
-        PreparedStatement pst;
-        ResultSet rs;
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            java.sql.Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel","root","Sudhir@123");
-            pst=con.prepareStatement("select * from signup where email=? AND password=?");
-            pst.setString(1,txtemail.getText());
-            pst.setString(2, txtpassword.getText());
-            rs=pst.executeQuery();
-            if(rs.next()){
-                pst=con.prepareStatement("select * from signup where status=? AND email=?");
-                pst.setString(1,"approved");
-                pst.setString(2, txtemail.getText());
-                rs=pst.executeQuery();
-                if(rs.next())
-                    new Home().setVisible(true);
-                else{
-                    JOptionPane.showMessageDialog(this,"Wait for Addmin Approval","Panding",JOptionPane.INFORMATION_MESSAGE);
-                    txtemail.requestFocus();
-                }
-                }
-            else{
-              JOptionPane.showMessageDialog(this,"Incorrect Email ID or Password","Incorrect",JOptionPane.WARNING_MESSAGE);
-            txtemail.requestFocus();
-            }           
-        } catch (ClassNotFoundException | SQLException ex) {
-            Logger.getLogger(SignIn.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        }
+        performLogin();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
-int yes=JOptionPane.showConfirmDialog(this, "Are You Really Close this Application ?","Exit",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
+    int yes=JOptionPane.showConfirmDialog(this, "Are You Really Close this Application ?","Exit",JOptionPane.YES_NO_OPTION,JOptionPane.QUESTION_MESSAGE);
         if(yes==JOptionPane.YES_OPTION){
             System.exit(0);
         }       
     }//GEN-LAST:event_jButton4ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-new Signup().setVisible(true);       
-//dispose(); 
+    new Signup().setVisible(true);       
+    //dispose(); 
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-new PassWord().setVisible(true);
+    new PassWord().setVisible(true);
 
-//dispose();// TODO add your handling code here:
+    //dispose();// TODO add your handling code here:
     }//GEN-LAST:event_jButton3ActionPerformed
 
     private void txtemailKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtemailKeyPressed
-if(evt.getKeyCode()==KeyEvent.VK_ENTER){
-    txtpassword.requestFocus();
-}// TODO add your handling code here:
+    if(evt.getKeyCode()==KeyEvent.VK_ENTER){
+        txtpassword.requestFocus();
+    }// TODO add your handling code here:
     }//GEN-LAST:event_txtemailKeyPressed
 
     private void txtpasswordKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtpasswordKeyPressed
-if(evt.getKeyCode()==KeyEvent.VK_ENTER){
-
-    if(txtemail.getText().equalsIgnoreCase("admin")&&txtpassword.getText().equalsIgnoreCase("admin")){
-           new Admin().setVisible(true); 
-           dispose();
-        }
-        else{
-        
-        PreparedStatement pst;
-        ResultSet rs;
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            java.sql.Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel","root","Sudhir@123");
-            pst=con.prepareStatement("select * from signup where email=? AND password=?");
-            pst.setString(1,txtemail.getText());
-            pst.setString(2, txtpassword.getText());
-            rs=pst.executeQuery();
-            if(rs.next()){
-                pst=con.prepareStatement("select * from signup where status=? AND email=?");
-                pst.setString(1,"approved");
-                pst.setString(2, txtemail.getText());
-                rs=pst.executeQuery();
-                if(rs.next())
-                    new Home().setVisible(true);
-                else{
-                    JOptionPane.showMessageDialog(this,"Wait for Addmin Approval","Panding",JOptionPane.INFORMATION_MESSAGE);
-                    txtemail.requestFocus();
-                }
-            }
-            else{
-              JOptionPane.showMessageDialog(this,"Incorrect Email ID or Password","Incorrect",JOptionPane.WARNING_MESSAGE);
-              txtemail.requestFocus();
-            }
-           
-        } catch (ClassNotFoundException ex) {
-            Logger.getLogger(SignIn.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (SQLException ex) {
-            Logger.getLogger(SignIn.class.getName()).log(Level.SEVERE, null, ex);
-        }
-            
-        
-        
-        
-        }
-        
-        
-        
-        
-
-
-
-}// TODO add your handling code here:
+    if(evt.getKeyCode()==KeyEvent.VK_ENTER){
+        performLogin();
+    }// TODO add your handling code here:
     }//GEN-LAST:event_txtpasswordKeyPressed
 
     private void jLabel4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel4MouseClicked
 
-if(flag==0){
-   jLabel4.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\s.png"));
-   flag=1;
-   txtpassword.setEchoChar((char)0);
-}
-else
-{
-    jLabel4.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\h.png"));
-    flag=0;
-    txtpassword.setEchoChar('*');
-     
-}
-
-
-
-
-
-
-
-
+    if(flag==0){
+       jLabel4.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\s.png"));
+       flag=1;
+       txtpassword.setEchoChar((char)0);
+    }
+    else
+    {
+        jLabel4.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\h.png"));
+        flag=0;
+        txtpassword.setEchoChar('*');
+         
+    }
         // TODO add your handling code here:
     }//GEN-LAST:event_jLabel4MouseClicked
 
@@ -331,26 +318,31 @@ else
     }//GEN-LAST:event_jButton1MouseExited
 
     private void txtemailKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtemailKeyReleased
-     txtemail.setText(txtemail.getText().toLowerCase()); 
+         txtemail.setText(txtemail.getText().toLowerCase()); 
 
-     int a=txtemail.getText().indexOf('@');
-     int b=txtemail.getText().length();
-     
-      if(a == -1){
-          lblemail.setText("Invalied Email id");
-      }
-      else if (b>a+1){
-      String s=txtemail.getText();
-      String[] splitString = s.split("@");
-      if(splitString[1].equalsIgnoreCase("gmail.com")){
-      lblemail.setText("");
-      txtpassword.requestFocus();
-      }
-      else
-         lblemail.setText("Invalied Email id");
-      }  
-      if(txtemail.getText().equals(""))
-          lblemail.setText("");
+         int a=txtemail.getText().indexOf('@');
+         int b=txtemail.getText().length();
+         
+          if(a == -1 && !txtemail.getText().equalsIgnoreCase("admin")){ // Allow "admin" without @
+              lblemail.setText("Invalid Email id");
+          }
+          else if (b>a+1 || txtemail.getText().equalsIgnoreCase("admin")){ // Allow "admin" or check domain
+            if (txtemail.getText().equalsIgnoreCase("admin")) {
+                 lblemail.setText("");
+                 txtpassword.requestFocus();
+            } else {
+              String s=txtemail.getText();
+              String[] splitString = s.split("@");
+              if(splitString.length > 1 && splitString[1].equalsIgnoreCase("gmail.com")){ // Basic validation
+                  lblemail.setText("");
+                  txtpassword.requestFocus();
+              } else {
+                 lblemail.setText("Invalid Email id");
+              }
+            }
+          }  
+          if(txtemail.getText().equals(""))
+              lblemail.setText("");
 
     }//GEN-LAST:event_txtemailKeyReleased
 

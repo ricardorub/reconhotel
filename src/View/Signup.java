@@ -1,8 +1,18 @@
 package View;
 
-
+import Controller.ControllerUser; // Import the new controller
+import java.awt.event.KeyEvent; // Import for VK_ENTER
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+// Removed java.sql imports as they are no longer needed here
+// import java.sql.PreparedStatement;
+// import java.sql.Statement;
+// import java.sql.ResultSet;
+// import java.sql.DriverManager;
+// import java.sql.SQLException;
+// import java.util.logging.Level; // Not used
+// import java.util.logging.Logger; // Not used
+
 
 /*
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
@@ -15,11 +25,13 @@ import javax.swing.JOptionPane;
  */
 public class Signup extends javax.swing.JFrame {
   int flag=0;
+  private ControllerUser controllerUser; // Add controller instance
     /**
      * Creates new form Signup
      */
     public Signup() {
         initComponents();
+        controllerUser = new ControllerUser(); // Initialize controller
     }
 
     /**
@@ -215,203 +227,114 @@ public class Signup extends javax.swing.JFrame {
         }
     }//GEN-LAST:event_jLabel1MouseClicked
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-    if(txtname.getText().equals("")){
-        JOptionPane.showMessageDialog(this,"All Field is required");
-        txtname.requestFocus();
-        }  
-    else if(txtemail.getText().equals("")){
-         JOptionPane.showMessageDialog(this,"All Field is required");
-         txtemail.requestFocus();
-    }
-    else if(txtpassword.getText().equals("")){
-        JOptionPane.showMessageDialog(this,"All Field is required");
-        txtpassword.requestFocus();
-        }
-    else if(txtans.getText().equals("")){
-        JOptionPane.showMessageDialog(this,"All Field is required");
-        txtans.requestFocus();
-        }
-    else{    
-    PreparedStatement pst=null;
-    Statement st=null;
-    ResultSet rs=null;
-    java.sql.Connection con=null;
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            con=DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel","root","Sudhir@123");
-           // st=con.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY);
-            pst=con.prepareStatement("select * from signup where email=?");
-            pst.setString(1, txtemail.getText());
-            rs=pst.executeQuery();
-            if(rs.next()){
-                JOptionPane.showMessageDialog(this,"Use Another Email ID");
+    private void performSignup() {
+        String name = txtname.getText();
+        String email = txtemail.getText();
+        String password = new String(txtpassword.getPassword());
+        String securityQuestion = jComboBox1.getItemAt(jComboBox1.getSelectedIndex());
+        String answer = txtans.getText();
+
+        if (name.equals("")) {
+            JOptionPane.showMessageDialog(this, "All Fields are required");
+            txtname.requestFocus();
+        } else if (email.equals("")) {
+            JOptionPane.showMessageDialog(this, "All Fields are required");
+            txtemail.requestFocus();
+        } else if (password.equals("")) {
+            JOptionPane.showMessageDialog(this, "All Fields are required");
+            txtpassword.requestFocus();
+        } else if (answer.equals("")) {
+            JOptionPane.showMessageDialog(this, "All Fields are required");
+            txtans.requestFocus();
+        } else {
+            boolean success = controllerUser.registrarUsuario(name, email, password, securityQuestion, answer);
+            if (success) {
+                JOptionPane.showMessageDialog(this, "Registered Successfully\nLogin Now");
+                new SignIn().setVisible(true);
+                // dispose(); // Optionally close the signup form
+            } else {
+                // ControllerUser will print specific error to console,
+                // but we can show a generic message to the user.
+                JOptionPane.showMessageDialog(this, "Registration Failed. Email might already exist or server error.", "Error", JOptionPane.ERROR_MESSAGE);
                 txtemail.requestFocus();
             }
-            else{
-           //      try {
-            //Class.forName("com.mysql.cj.jdbc.Driver");
-            //con=DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel","root","Sudhir@123");
-            pst=con.prepareStatement("insert into signup(name,email,password,sq,answer)values(?,?,?,?,?)");
-            pst.setString(1, txtname.getText());
-            pst.setString(2, txtemail.getText().toLowerCase());
-            pst.setString(3, txtpassword.getText());
-            pst.setString(4, jComboBox1.getItemAt(jComboBox1.getSelectedIndex()));
-            pst.setString(5, txtans.getText());
-            pst.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Registered Successfully\nLogin Now");
-           new SignIn().setVisible(true);  
-       // } catch (SQLException ex) {
-            //Logger.getLogger(Record.class.getName()).log(Level.SEVERE, null, ex);
-       // }
-                
-                
-            }
-            
-        } catch (ClassNotFoundException | SQLException ex) {
-           //Logger.getLogger(Record.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-        
-        
-        
-         
-        
 
-
-
-
-
-
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
+        performSignup();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
- new SignIn().setVisible(true);
-
-//dispose();                    
+     new SignIn().setVisible(true);
+    //dispose();                    
     // TODO add your handling code here:
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void txtansKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtansKeyPressed
-if(evt.getKeyCode()==KeyEvent.VK_ENTER){
-        if(txtname.getText().equals("")){
-        JOptionPane.showMessageDialog(this,"All Field is required");
-        txtname.requestFocus();
-        }  
-    else if(txtemail.getText().equals("")){
-         JOptionPane.showMessageDialog(this,"All Field is required");
-         txtemail.requestFocus();
+    if(evt.getKeyCode()==KeyEvent.VK_ENTER){
+        performSignup();
     }
-    else if(txtpassword.getText().equals("")){
-        JOptionPane.showMessageDialog(this,"All Field is required");
-        txtpassword.requestFocus();
-        }
-    else if(txtans.getText().equals("")){
-        JOptionPane.showMessageDialog(this,"All Field is required");
-        txtans.requestFocus();
-        }
-    else{    
-    PreparedStatement pst=null;
-    Statement st=null;
-    ResultSet rs=null;
-    java.sql.Connection con=null;
-   
-        
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            con=DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel","root","Sudhir@123");
-            st=con.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY);
-            pst=con.prepareStatement("select * from signup where email=?");
-            pst.setString(1, txtemail.getText());
-            rs=pst.executeQuery();
-            if(rs.next()){
-                JOptionPane.showMessageDialog(this,"Use Another Email ID");
-                txtemail.requestFocus();
-            }
-            else{
-                 try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            con=DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel","root","Sudhir@123");
-            pst=con.prepareStatement("insert into signup(name,email,password,sq,answer)values(?,?,?,?,?)");
-            pst.setString(1, txtname.getText());
-            pst.setString(2, txtemail.getText().toLowerCase());
-            pst.setString(3, txtpassword.getText());
-            pst.setString(4, jComboBox1.getItemAt(jComboBox1.getSelectedIndex()));
-            pst.setString(5, txtans.getText());
-            pst.executeUpdate();
-            JOptionPane.showMessageDialog(this, "Registered Successfully\nLogin Now ");
-            new SignIn().setVisible(true);  
-        } catch (ClassNotFoundException | SQLException ex) {
-            //Logger.getLogger(Record.class.getName()).log(Level.SEVERE, null, ex);
-        }
-                
-                
-            }
-            
-        } catch (ClassNotFoundException | SQLException ex) {
-           //Logger.getLogger(Record.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-}// TODO add your handling code here:
     }//GEN-LAST:event_txtansKeyPressed
 
     private void txtnameKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtnameKeyPressed
-if(evt.getKeyCode()==KeyEvent.VK_ENTER){
-    txtemail.requestFocus();// TODO add your handling code here:
-    }//GEN-LAST:event_txtnameKeyPressed
+    if(evt.getKeyCode()==KeyEvent.VK_ENTER){
+        txtemail.requestFocus();// TODO add your handling code here:
     }
+    }//GEN-LAST:event_txtnameKeyPressed
+    
     private void txtemailKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtemailKeyPressed
     if(evt.getKeyCode()==KeyEvent.VK_ENTER)
-    txtpassword.requestFocus();// TODO add your handling code here:
+        txtpassword.requestFocus();// TODO add your handling code here:
     }//GEN-LAST:event_txtemailKeyPressed
 
     private void txtpasswordKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtpasswordKeyPressed
- if(evt.getKeyCode()==KeyEvent.VK_ENTER)
-    jComboBox1.requestFocus();        // TODO add your handling code here:
+    if(evt.getKeyCode()==KeyEvent.VK_ENTER)
+        jComboBox1.requestFocus();        // TODO add your handling code here:
     }//GEN-LAST:event_txtpasswordKeyPressed
 
     private void jComboBox1KeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jComboBox1KeyPressed
     if(evt.getKeyCode()==KeyEvent.VK_ENTER)
-    txtans.requestFocus();// TODO add y     // TODO add your handling code here:
+        txtans.requestFocus();    // TODO add your handling code here:
     }//GEN-LAST:event_jComboBox1KeyPressed
 
     private void jLabel9MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel9MouseClicked
 
-if(flag==0){
-   jLabel9.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\s.png"));
-   flag=1;
-   txtpassword.setEchoChar((char)0);
-}
-else
-{
-    jLabel9.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\h.png"));
-    flag=0;
-    txtpassword.setEchoChar('*');
-     
-}        // TODO add your handling code here:
+    if(flag==0){
+       jLabel9.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\s.png"));
+       flag=1;
+       txtpassword.setEchoChar((char)0);
+    }
+    else
+    {
+        jLabel9.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\h.png"));
+        flag=0;
+        txtpassword.setEchoChar('*');
+         
+    }        // TODO add your handling code here:
     }//GEN-LAST:event_jLabel9MouseClicked
 
     private void txtemailKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtemailKeyReleased
-txtemail.setText(txtemail.getText().toLowerCase()); 
+    txtemail.setText(txtemail.getText().toLowerCase()); 
 
-     int a=txtemail.getText().indexOf('@');
-     int b=txtemail.getText().length();
-     
-      if(a == -1){
-          lblemail.setText("Invalied Email id");
-      }
-      else if (b>a+1){
-      String s=txtemail.getText();
-      String[] splitString = s.split("@");
-      if(splitString[1].equalsIgnoreCase("gmail.com")){
-      lblemail.setText("");
-      txtpassword.requestFocus();
-      }
-      else
-         lblemail.setText("Invalied Email id");
-      }  
-      if(txtemail.getText().equals(""))
+         int a=txtemail.getText().indexOf('@');
+         int b=txtemail.getText().length();
+         
+          if(a == -1){
+              lblemail.setText("Invalid Email id");
+          }
+          else if (b>a+1){
+          String s=txtemail.getText();
+          String[] splitString = s.split("@");
+          if(splitString[1].equalsIgnoreCase("gmail.com")){ // Basic validation
           lblemail.setText("");
+          // txtpassword.requestFocus(); // Removed auto-focus for better UX
+          }
+          else
+             lblemail.setText("Invalid Email id");
+          }  
+          if(txtemail.getText().equals(""))
+              lblemail.setText("");
 
     }//GEN-LAST:event_txtemailKeyReleased
 
