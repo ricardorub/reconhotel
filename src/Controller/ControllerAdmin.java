@@ -13,7 +13,7 @@ import java.sql.ResultSet;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.Properties;
-import org.mindrot.jbcrypt.BCrypt; // Import BCrypt
+// import org.mindrot.jbcrypt.BCrypt; // BCrypt removed
 
 public class ControllerAdmin {
 
@@ -47,7 +47,7 @@ public class ControllerAdmin {
     }
 
     /**
-     * Registers a new admin user with a hashed password.
+     * Registers a new admin user with a plain password.
      *
      * @param username The desired username for the new admin.
      * @param plainPassword The plain-text password for the new admin.
@@ -62,7 +62,7 @@ public class ControllerAdmin {
             return false;
         }
         if (username == null || username.trim().isEmpty() || 
-            plainPassword == null || plainPassword.isEmpty() ||
+            plainPassword == null || plainPassword.isEmpty() || // Password is now plain text
             email == null || email.trim().isEmpty()) {
             System.err.println("Username, password, or email cannot be empty for admin registration.");
             return false;
@@ -73,16 +73,18 @@ public class ControllerAdmin {
         }
 
         // The column name in the database for the password is 'password_hash'.
-        // This is appropriate now as we are storing a hash.
+        // This should ideally be renamed to 'password' or similar if storing plain text.
+        // For now, we'll use the existing column name.
         String sql = "INSERT INTO admin (username, password_hash, email, security_question, answer, status) VALUES (?, ?, ?, ?, ?, ?)";
 
         try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
+            // String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt()); // BCrypt removed
+            String passwordToStore = plainPassword; // Storing plain password
 
             pstmt.setString(1, username);
-            pstmt.setString(2, hashedPassword); // Storing hashed password
+            pstmt.setString(2, passwordToStore); // Storing plain password
             pstmt.setString(3, email);
             pstmt.setString(4, securityQuestion);
             pstmt.setString(5, answer);
@@ -91,7 +93,7 @@ public class ControllerAdmin {
             int affectedRows = pstmt.executeUpdate();
 
             if (affectedRows > 0) {
-                System.out.println("Admin user '" + username + "' registered successfully.");
+                System.out.println("Admin user '" + username + "' registered successfully (plain password).");
                 return true;
             } else {
                 System.err.println("Admin user registration failed for '" + username + "' (no rows affected).");
@@ -135,7 +137,7 @@ public class ControllerAdmin {
     }
 
     /**
-     * Verifies an admin's plain-text password against the stored hash.
+     * Verifies an admin's plain-text password against the stored plain password.
      *
      * @param username Admin's username.
      * @param plainPassword The plain-text password to verify.
@@ -147,19 +149,22 @@ public class ControllerAdmin {
             return false;
         }
         // Assuming login is by username for admins
-        String sql = "SELECT password_hash FROM admin WHERE username = ?";
+        // The column name in the database for the password is 'password_hash'.
+        // This should ideally be renamed to 'password' or similar if storing plain text.
+        String sql = "SELECT password_hash FROM admin WHERE username = ?"; 
         try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
             pstmt.setString(1, username);
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    String storedHash = rs.getString("password_hash");
-                    if (storedHash == null || storedHash.isEmpty()) {
+                    String storedPassword = rs.getString("password_hash"); // Actually plain password now
+                    if (storedPassword == null || storedPassword.isEmpty()) {
                         System.err.println("Admin '" + username + "' has no password set or password_hash is empty.");
-                        return false; // Or handle as an error
+                        return false; 
                     }
-                    return BCrypt.checkpw(plainPassword, storedHash);
+                    // return BCrypt.checkpw(plainPassword, storedPassword); // BCrypt removed
+                    return plainPassword.equals(storedPassword); // Simple string comparison
                 }
                 System.err.println("Admin user '" + username + "' not found for password verification.");
                 return false; // Admin not found
@@ -183,11 +188,11 @@ public class ControllerAdmin {
         System.out.println("ControllerAdmin - DB Driver: " + controller.dbDriver);
 
         // Test Case 1: Register a new admin
-        String testAdminUser = "testAdminBCrypt";
+        String testAdminUser = "testAdminPlain"; // Changed user for clarity
         String testAdminPass = "securePassword123";
-        String testAdminEmail = "testadminbcrypt@example.com";
+        String testAdminEmail = "testadminplain@example.com"; // Changed email
 
-        System.out.println("\n--- ControllerAdmin Test Case 1: Register New Admin with BCrypt ---");
+        System.out.println("\n--- ControllerAdmin Test Case 1: Register New Admin (Plain Text Password) ---");
         boolean success1 = controller.registrarAdmin(testAdminUser, testAdminPass, testAdminEmail, "Fav IDE?", "NetBeans");
         if (success1) {
             System.out.println("Test Case 1: Registration successful for " + testAdminUser);
@@ -197,7 +202,7 @@ public class ControllerAdmin {
 
         // Test Case 2: Verify correct password for the new admin
         System.out.println("\n--- ControllerAdmin Test Case 2: Verify Correct Password ---");
-        if (success1) { // Only try to verify if registration was potentially successful
+        if (success1) { 
             boolean passVerify1 = controller.verificarPasswordAdmin(testAdminUser, testAdminPass);
             if (passVerify1) {
                 System.out.println("Test Case 2: Password verification successful for " + testAdminUser);
@@ -230,7 +235,8 @@ public class ControllerAdmin {
             System.out.println("Test Case 4: INCORRECTLY registered duplicate username '" + testAdminUser + "'.");
         }
 
-        System.out.println("\nControllerAdmin BCrypt testing complete. Check 'admin' table in database for results (password_hash should be a BCrypt hash).");
-        System.out.println("Ensure the 'admin' table's 'password_hash' column is long enough for BCrypt hashes (e.g., VARCHAR(60) or VARCHAR(72)).");
+        System.out.println("\nControllerAdmin plain text password testing complete. Check 'admin' table in database for results (password_hash column now stores plain text).");
+        System.out.println("REMINDER: Storing plain text passwords is a major security risk. This change is for demonstration/specific request only.");
+        System.out.println("The 'admin' table's 'password_hash' column might need its data type/length adjusted if it was previously sized for BCrypt hashes.");
     }
 }

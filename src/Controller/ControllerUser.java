@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.Properties;
 import java.io.FileInputStream;
 import java.io.IOException;
-import org.mindrot.jbcrypt.BCrypt; // Import BCrypt
 
 public class ControllerUser {
 
@@ -42,7 +41,7 @@ public class ControllerUser {
     }
 
     /**
-     * Registers a new user with a hashed password.
+     * Registers a new user with a plain password.
      *
      * @param name User's full name.
      * @param email User's email address (acts as username).
@@ -58,7 +57,7 @@ public class ControllerUser {
         }
         if (name == null || name.trim().isEmpty() ||
             email == null || email.trim().isEmpty() ||
-            plainPassword == null || plainPassword.isEmpty() ||
+            plainPassword == null || plainPassword.isEmpty() || // Password is now plain text
             securityQuestion == null || securityQuestion.trim().isEmpty() ||
             answer == null || answer.trim().isEmpty()) {
             System.err.println("All fields are required for user registration.");
@@ -79,15 +78,16 @@ public class ControllerUser {
 
             pstmt.setString(1, name);
             pstmt.setString(2, email.toLowerCase());
-            String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt());
-            pstmt.setString(3, hashedPassword); // Store hashed password
+            // String hashedPassword = BCrypt.hashpw(plainPassword, BCrypt.gensalt()); // BCrypt removed
+            String passwordToStore = plainPassword; // Storing plain password
+            pstmt.setString(3, passwordToStore); // Store plain password
             pstmt.setString(4, securityQuestion);
             pstmt.setString(5, answer);
 
             int affectedRows = pstmt.executeUpdate();
 
             if (affectedRows > 0) {
-                System.out.println("User '" + name + "' registered successfully with email '" + email + "'.");
+                System.out.println("User '" + name + "' registered successfully with email '" + email + "' (plain password).");
                 return true;
             } else {
                 System.err.println("User registration failed for '" + name + "' (no rows affected).");
@@ -125,7 +125,7 @@ public class ControllerUser {
     }
 
     /**
-     * Verifies a user's plain-text password against the stored hash.
+     * Verifies a user's plain-text password against the stored plain password.
      *
      * @param email User's email address.
      * @param plainPassword The plain-text password to verify.
@@ -143,8 +143,9 @@ public class ControllerUser {
             pstmt.setString(1, email.toLowerCase());
             try (ResultSet rs = pstmt.executeQuery()) {
                 if (rs.next()) {
-                    String storedHash = rs.getString("password");
-                    return BCrypt.checkpw(plainPassword, storedHash);
+                    String storedPassword = rs.getString("password"); // Actually plain password now
+                    // return BCrypt.checkpw(plainPassword, storedPassword); // BCrypt removed
+                    return plainPassword.equals(storedPassword); // Simple string comparison
                 }
                 return false; // User not found
             }
@@ -184,30 +185,30 @@ public class ControllerUser {
         System.out.println("ControllerUser - DB Driver: " + controller.dbDriver);
 
         // Test Case 1: Register a new user
-        System.out.println("\n--- ControllerUser Test Case 1: Register New User ---");
-        boolean success1 = controller.registrarUsuario("Test User One", "testuser1@example.com", "pass123", "Fav Game?", "Chess");
+        System.out.println("\n--- ControllerUser Test Case 1: Register New User (Plain Password) ---");
+        boolean success1 = controller.registrarUsuario("Test User PlainOne", "testuserplain1@example.com", "pass123", "Fav Game?", "Chess");
         if (success1) {
-            System.out.println("Test Case 1: Registration successful for testuser1@example.com.");
+            System.out.println("Test Case 1: Registration successful for testuserplain1@example.com.");
         } else {
-            System.out.println("Test Case 1: Registration failed for testuser1@example.com.");
+            System.out.println("Test Case 1: Registration failed for testuserplain1@example.com.");
         }
 
         // Test Case 2: Try to register the same user email (should fail)
         System.out.println("\n--- ControllerUser Test Case 2: Register Duplicate Email ---");
-        boolean success2 = controller.registrarUsuario("Another User", "testuser1@example.com", "pass456", "Fav Bike?", "Mountain");
+        boolean success2 = controller.registrarUsuario("Another User", "testuserplain1@example.com", "pass456", "Fav Bike?", "Mountain");
         if (!success2) {
-            System.out.println("Test Case 2: Correctly failed to register duplicate email 'testuser1@example.com'.");
+            System.out.println("Test Case 2: Correctly failed to register duplicate email 'testuserplain1@example.com'.");
         } else {
-            System.out.println("Test Case 2: INCORRECTLY registered duplicate email 'testuser1@example.com'.");
+            System.out.println("Test Case 2: INCORRECTLY registered duplicate email 'testuserplain1@example.com'.");
         }
 
         // Test Case 3: Register another new user
-        System.out.println("\n--- ControllerUser Test Case 3: Register Second New User ---");
-        boolean success3 = controller.registrarUsuario("Test User Two", "testuser2@example.com", "secureP@ss", "Fav City?", "Paris");
+        System.out.println("\n--- ControllerUser Test Case 3: Register Second New User (Plain Password) ---");
+        boolean success3 = controller.registrarUsuario("Test User PlainTwo", "testuserplain2@example.com", "secureP@ss", "Fav City?", "Paris");
         if (success3) {
-            System.out.println("Test Case 3: Registration successful for testuser2@example.com.");
+            System.out.println("Test Case 3: Registration successful for testuserplain2@example.com.");
         } else {
-            System.out.println("Test Case 3: Registration failed for testuser2@example.com.");
+            System.out.println("Test Case 3: Registration failed for testuserplain2@example.com.");
         }
         
         // Test Case 4: Register with empty name (should fail)
@@ -220,28 +221,28 @@ public class ControllerUser {
         }
 
         // Test Cases for password verification
-        System.out.println("\n--- ControllerUser Test Case 5: Verify Correct Password for testuser1@example.com ---");
+        System.out.println("\n--- ControllerUser Test Case 5: Verify Correct Password for testuserplain1@example.com ---");
         if (success1) { // Check if user1 was successfully registered
-            boolean verifyPass1 = controller.verificarPassword("testuser1@example.com", "pass123");
+            boolean verifyPass1 = controller.verificarPassword("testuserplain1@example.com", "pass123");
             if (verifyPass1) {
-                System.out.println("Test Case 5: Password verification successful for testuser1@example.com.");
+                System.out.println("Test Case 5: Password verification successful for testuserplain1@example.com.");
             } else {
-                System.err.println("Test Case 5: Password verification FAILED for testuser1@example.com with correct password.");
+                System.err.println("Test Case 5: Password verification FAILED for testuserplain1@example.com with correct password.");
             }
         } else {
-            System.out.println("Test Case 5: Skipped due to registration failure of testuser1@example.com.");
+            System.out.println("Test Case 5: Skipped due to registration failure of testuserplain1@example.com.");
         }
 
-        System.out.println("\n--- ControllerUser Test Case 6: Verify Incorrect Password for testuser1@example.com ---");
+        System.out.println("\n--- ControllerUser Test Case 6: Verify Incorrect Password for testuserplain1@example.com ---");
         if (success1) {
-            boolean verifyPass2 = controller.verificarPassword("testuser1@example.com", "wrongpass");
+            boolean verifyPass2 = controller.verificarPassword("testuserplain1@example.com", "wrongpass");
             if (!verifyPass2) {
-                System.out.println("Test Case 6: Correctly failed to verify incorrect password for testuser1@example.com.");
+                System.out.println("Test Case 6: Correctly failed to verify incorrect password for testuserplain1@example.com.");
             } else {
-                System.err.println("Test Case 6: INCORRECTLY verified incorrect password for testuser1@example.com.");
+                System.err.println("Test Case 6: INCORRECTLY verified incorrect password for testuserplain1@example.com.");
             }
         } else {
-            System.out.println("Test Case 6: Skipped due to registration failure of testuser1@example.com.");
+            System.out.println("Test Case 6: Skipped due to registration failure of testuserplain1@example.com.");
         }
 
         System.out.println("\n--- ControllerUser Test Case 7: Verify Password for Non-existent User ---");
@@ -252,9 +253,8 @@ public class ControllerUser {
             System.err.println("Test Case 7: INCORRECTLY verified password for non-existent user.");
         }
 
-
-        System.out.println("\nControllerUser main method testing complete. Check 'signup' table in database for results.");
-        System.out.println("Remember to clear the 'signup' table or use unique emails for each full test run for predictable results.");
+        System.out.println("\nControllerUser plain password testing complete. Check 'signup' table in database for results (password column now stores plain text).");
+        System.out.println("REMINDER: Storing plain text passwords is a major security risk. This change is for demonstration/specific request only.");
+        System.out.println("The 'signup' table's 'password' column might need its data type/length adjusted if it was previously sized for BCrypt hashes.");
     }
 }
-
