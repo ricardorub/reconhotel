@@ -234,7 +234,8 @@ public class SignIn extends javax.swing.JFrame {
         });
         jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(21, 184, -1, 30));
 
-        jLabel4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/h.png"))); // NOI18N
+        // Assuming h.png should be in /image/ like other icons. User needs to add h.png to src/image/
+        jLabel4.setIcon(new javax.swing.ImageIcon(getClass().getResource("/image/h.png"))); // NOI18N
         jLabel4.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jLabel4MouseClicked(evt);
@@ -293,14 +294,31 @@ public class SignIn extends javax.swing.JFrame {
 
     private void jLabel4MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel4MouseClicked
 
+    // User needs to add s.png and h.png to src/image/ directory
     if(flag==0){
-       jLabel4.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\s.png"));
+       // Attempt to load s.png from classpath
+       java.net.URL sPngUrl = getClass().getResource("/image/s.png");
+       if (sPngUrl != null) {
+           jLabel4.setIcon(new ImageIcon(sPngUrl));
+       } else {
+           System.err.println("Error: /image/s.png not found!");
+           // Optionally, set text or a default icon if image is missing
+           // jLabel4.setText("S"); 
+       }
        flag=1;
        txtpassword.setEchoChar((char)0);
     }
     else
     {
-        jLabel4.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\h.png"));
+        // Attempt to load h.png from classpath
+        java.net.URL hPngUrl = getClass().getResource("/image/h.png");
+        if (hPngUrl != null) {
+            jLabel4.setIcon(new ImageIcon(hPngUrl));
+        } else {
+            System.err.println("Error: /image/h.png not found!");
+            // Optionally, set text or a default icon if image is missing
+            // jLabel4.setText("H");
+        }
         flag=0;
         txtpassword.setEchoChar('*');
          
