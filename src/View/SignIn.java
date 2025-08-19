@@ -43,20 +43,8 @@ public class SignIn extends javax.swing.JFrame {
         boolean passwordMatches = controllerUser.verificarPassword(email, password);
 
         if (passwordMatches) {
-            String status = controllerUser.getUserStatus(email);
-
-            if (status != null) {
-                if ("approved".equalsIgnoreCase(status)) {
-                    new Home().setVisible(true);
-                    dispose();
-                } else {
-                    JOptionPane.showMessageDialog(this, "Login successful, but account is pending admin approval.", "Pending Approval", JOptionPane.INFORMATION_MESSAGE);
-                    txtemail.requestFocus();
-                }
-            } else {
-                // This case could mean user not found, or a db error. The controller logs the error.
-                 JOptionPane.showMessageDialog(this, "Login failed. Could not verify user status.", "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            new Home().setVisible(true);
+            dispose();
         } else {
             JOptionPane.showMessageDialog(this, "Incorrect Email ID or Password.", "Login Failed", JOptionPane.WARNING_MESSAGE);
             txtemail.requestFocus();

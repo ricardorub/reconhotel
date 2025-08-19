@@ -155,28 +155,6 @@ public class ControllerUser {
         }
     }
 
-    public String getUserStatus(String email) {
-        if (dbUrl == null) {
-            System.err.println("Database configuration not loaded. Cannot get user status.");
-            return null;
-        }
-        String sql = "SELECT status FROM signup WHERE email = ?";
-        try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            
-            pstmt.setString(1, email.toLowerCase());
-            try (ResultSet rs = pstmt.executeQuery()) {
-                if (rs.next()) {
-                    return rs.getString("status");
-                }
-                return null; // User not found
-            }
-        } catch (SQLException e) {
-            System.err.println("Database error getting status for email '" + email + "': " + e.getMessage());
-            return null; 
-        }
-    }
-
     public String getSecurityQuestion(String email) {
         if (dbUrl == null) {
             System.err.println("Database configuration not loaded. Cannot get security question.");
