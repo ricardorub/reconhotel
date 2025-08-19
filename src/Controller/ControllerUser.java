@@ -155,21 +155,91 @@ public class ControllerUser {
         }
     }
 
-    // Getter methods for database properties (needed by SignIn.java for status check)
-    public String getDbUrlProperty() {
-        return dbUrl;
+    public String getUserStatus(String email) {
+        if (dbUrl == null) {
+            System.err.println("Database configuration not loaded. Cannot get user status.");
+            return null;
+        }
+        String sql = "SELECT status FROM signup WHERE email = ?";
+        try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, email.toLowerCase());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("status");
+                }
+                return null; // User not found
+            }
+        } catch (SQLException e) {
+            System.err.println("Database error getting status for email '" + email + "': " + e.getMessage());
+            return null; 
+        }
     }
 
-    public String getDbUserProperty() {
-        return dbUser;
+    public String getSecurityQuestion(String email) {
+        if (dbUrl == null) {
+            System.err.println("Database configuration not loaded. Cannot get security question.");
+            return null;
+        }
+        String sql = "SELECT sq FROM signup WHERE email = ?";
+        try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, email.toLowerCase());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getString("sq");
+                }
+                return null; // User not found
+            }
+        } catch (SQLException e) {
+            System.err.println("Database error getting security question for email '" + email + "': " + e.getMessage());
+            return null; 
+        }
     }
 
-    public String getDbPasswordProperty() {
-        return dbPassword;
+    public boolean verifySecurityAnswer(String email, String answer) {
+        if (dbUrl == null) {
+            System.err.println("Database configuration not loaded. Cannot verify security answer.");
+            return false;
+        }
+        String sql = "SELECT answer FROM signup WHERE email = ?";
+        try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, email.toLowerCase());
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    String storedAnswer = rs.getString("answer");
+                    return answer.equals(storedAnswer);
+                }
+                return false; // User not found
+            }
+        } catch (SQLException e) {
+            System.err.println("Database error verifying security answer for email '" + email + "': " + e.getMessage());
+            return false; 
+        }
     }
 
-    public String getDbDriverProperty() {
-        return dbDriver;
+    public boolean updatePassword(String email, String newPassword) {
+        if (dbUrl == null) {
+            System.err.println("Database configuration not loaded. Cannot update password.");
+            return false;
+        }
+        String sql = "UPDATE signup SET password = ? WHERE email = ?";
+        try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPassword);
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            
+            pstmt.setString(1, newPassword);
+            pstmt.setString(2, email.toLowerCase());
+
+            int affectedRows = pstmt.executeUpdate();
+            return affectedRows > 0;
+        } catch (SQLException e) {
+            System.err.println("Database error updating password for email '" + email + "': " + e.getMessage());
+            return false; 
+        }
     }
     
     // Main method for basic testing of ControllerUser

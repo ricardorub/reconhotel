@@ -1,17 +1,9 @@
 package View;
 
 import Controller.ControllerUser; // Import ControllerUser
-// import Controller.ControllerAdmin; // Only if admin login is also handled here
 import java.awt.event.KeyEvent; // For VK_ENTER
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
-// Removed java.sql imports as they are no longer needed for basic login
-// import java.sql.PreparedStatement;
-// import java.sql.ResultSet;
-// import java.sql.DriverManager;
-// import java.sql.SQLException;
 
 
 /*
@@ -27,7 +19,6 @@ public class SignIn extends javax.swing.JFrame {
 
     int flag=0;
     private ControllerUser controllerUser; // Instance of ControllerUser
-    // private ControllerAdmin controllerAdmin; // If handling admin login too
 
     /**
      * Creates new form SignIn
@@ -36,7 +27,6 @@ public class SignIn extends javax.swing.JFrame {
         initComponents();
         txtemail.requestFocus();
         controllerUser = new ControllerUser();
-        // controllerAdmin = new ControllerAdmin(); // If handling admin login too
        }
 
     private void performLogin() {
@@ -49,55 +39,24 @@ public class SignIn extends javax.swing.JFrame {
             return;
         }
 
-        // Hardcoded admin check (remains as per original logic for View.Admin)
-        if (email.equalsIgnoreCase("admin") && password.equalsIgnoreCase("admin")) {
-            new Admin().setVisible(true); // This refers to View.Admin
-            dispose();
-            return;
-        }
-
         // Attempt to login as a regular user
         boolean passwordMatches = controllerUser.verificarPassword(email, password);
 
         if (passwordMatches) {
-            // Password is correct, now check approval status (logic adapted from original)
-            // This status check ideally should be part of a more comprehensive user service
-            // For now, we'll query it directly after successful password verification.
-            // This part still uses direct JDBC as ControllerUser doesn't yet have a method for this.
-            // This should be refactored into ControllerUser later.
-            try {
-                Class.forName(controllerUser.getDbDriverProperty()); // Assuming ControllerUser can provide this
-                java.sql.Connection con = java.sql.DriverManager.getConnection(
-                    controllerUser.getDbUrlProperty(), 
-                    controllerUser.getDbUserProperty(), 
-                    controllerUser.getDbPasswordProperty()
-                );
-                java.sql.PreparedStatement pstCheckStatus = con.prepareStatement("SELECT status FROM signup WHERE email = ?");
-                pstCheckStatus.setString(1, email.toLowerCase());
-                java.sql.ResultSet rsStatus = pstCheckStatus.executeQuery();
+            String status = controllerUser.getUserStatus(email);
 
-                if (rsStatus.next()) {
-                    String status = rsStatus.getString("status");
-                    if ("approved".equalsIgnoreCase(status)) {
-                        new Home().setVisible(true);
-                        dispose();
-                    } else {
-                        JOptionPane.showMessageDialog(this, "Login successful, but account is pending admin approval.", "Pending Approval", JOptionPane.INFORMATION_MESSAGE);
-                        txtemail.requestFocus();
-                    }
+            if (status != null) {
+                if ("approved".equalsIgnoreCase(status)) {
+                    new Home().setVisible(true);
+                    dispose();
                 } else {
-                    // This case should ideally not happen if verificarPassword was true,
-                    // means user exists but somehow status couldn't be fetched.
-                     JOptionPane.showMessageDialog(this, "Login failed. User data inconsistent.", "Error", JOptionPane.ERROR_MESSAGE);
+                    JOptionPane.showMessageDialog(this, "Login successful, but account is pending admin approval.", "Pending Approval", JOptionPane.INFORMATION_MESSAGE);
+                    txtemail.requestFocus();
                 }
-                if (rsStatus != null) rsStatus.close();
-                if (pstCheckStatus != null) pstCheckStatus.close();
-                if (con != null) con.close();
-            } catch (ClassNotFoundException | java.sql.SQLException ex) {
-                Logger.getLogger(SignIn.class.getName()).log(Level.SEVERE, null, ex);
-                JOptionPane.showMessageDialog(this, "Database error during status check.", "Error", JOptionPane.ERROR_MESSAGE);
+            } else {
+                // This case could mean user not found, or a db error. The controller logs the error.
+                 JOptionPane.showMessageDialog(this, "Login failed. Could not verify user status.", "Error", JOptionPane.ERROR_MESSAGE);
             }
-
         } else {
             JOptionPane.showMessageDialog(this, "Incorrect Email ID or Password.", "Login Failed", JOptionPane.WARNING_MESSAGE);
             txtemail.requestFocus();
@@ -341,14 +300,10 @@ public class SignIn extends javax.swing.JFrame {
          int a=txtemail.getText().indexOf('@');
          int b=txtemail.getText().length();
          
-          if(a == -1 && !txtemail.getText().equalsIgnoreCase("admin")){ // Allow "admin" without @
+          if(a == -1){
               lblemail.setText("Invalid Email id");
           }
-          else if (b>a+1 || txtemail.getText().equalsIgnoreCase("admin")){ // Allow "admin" or check domain
-            if (txtemail.getText().equalsIgnoreCase("admin")) {
-                 lblemail.setText("");
-                 txtpassword.requestFocus();
-            } else {
+          else if (b>a+1){
               String s=txtemail.getText();
               String[] splitString = s.split("@");
               if(splitString.length > 1 && splitString[1].equalsIgnoreCase("gmail.com")){ // Basic validation
@@ -357,7 +312,6 @@ public class SignIn extends javax.swing.JFrame {
               } else {
                  lblemail.setText("Invalid Email id");
               }
-            }
           }  
           if(txtemail.getText().equals(""))
               lblemail.setText("");

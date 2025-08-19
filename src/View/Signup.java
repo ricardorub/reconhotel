@@ -4,6 +4,8 @@ import Controller.ControllerUser; // Import the new controller
 import java.awt.event.KeyEvent; // Import for VK_ENTER
 import javax.swing.ImageIcon;
 import javax.swing.JOptionPane;
+import java.net.URL; // Import for URL
+
 // Removed java.sql imports as they are no longer needed here
 // import java.sql.PreparedStatement;
 // import java.sql.Statement;
@@ -68,7 +70,14 @@ public class Signup extends javax.swing.JFrame {
         setSize(new java.awt.Dimension(1366, 768));
         getContentPane().setLayout(new org.netbeans.lib.awtextra.AbsoluteLayout());
 
-        jLabel1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/image/exit.png"))); // NOI18N
+        // Load exit icon with null check
+        URL exitIconUrl = getClass().getResource("/image/exit.png");
+        if (exitIconUrl != null) {
+            jLabel1.setIcon(new ImageIcon(exitIconUrl)); // NOI18N
+        } else {
+            System.err.println("Couldn't find file: /image/exit.png");
+            jLabel1.setText("X"); // Fallback text
+        }
         jLabel1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jLabel1MouseClicked(evt);
@@ -189,7 +198,14 @@ public class Signup extends javax.swing.JFrame {
         });
         jPanel1.add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(156, 343, 80, 30));
 
-        jLabel9.setIcon(new javax.swing.ImageIcon(getClass().getResource("/h.png"))); // NOI18N
+        // Load h.png icon for jLabel9 with null check
+        URL hIconUrl = getClass().getResource("/image/h.png"); // Assuming h.png is in /image/
+        if (hIconUrl != null) {
+            jLabel9.setIcon(new ImageIcon(hIconUrl)); // NOI18N
+        } else {
+            System.err.println("Couldn't find file: /image/h.png");
+            jLabel9.setText("Show/Hide"); // Fallback text
+        }
         jLabel9.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jLabel9MouseClicked(evt);
@@ -202,7 +218,14 @@ public class Signup extends javax.swing.JFrame {
 
         getContentPane().add(jPanel1, new org.netbeans.lib.awtextra.AbsoluteConstraints(440, 160, 570, 420));
 
-        jLabel8.setIcon(new javax.swing.ImageIcon(getClass().getResource("/image/green-natural-background-vector-illustration-59110.jpg"))); // NOI18N
+        // Load background image for jLabel8 with null check
+        URL backgroundImageUrl = getClass().getResource("/image/green-natural-background-vector-illustration-59110.jpg");
+        if (backgroundImageUrl != null) {
+            jLabel8.setIcon(new ImageIcon(backgroundImageUrl)); // NOI18N
+        } else {
+            System.err.println("Couldn't find file: /image/green-natural-background-vector-illustration-59110.jpg");
+            // Optionally set a background color or leave it blank
+        }
         getContentPane().add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1370, 770));
 
         pack();
@@ -299,19 +322,30 @@ public class Signup extends javax.swing.JFrame {
     }//GEN-LAST:event_jComboBox1KeyPressed
 
     private void jLabel9MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jLabel9MouseClicked
-
-    if(flag==0){
-       jLabel9.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\s.png"));
-       flag=1;
-       txtpassword.setEchoChar((char)0);
-    }
-    else
-    {
-        jLabel9.setIcon(new ImageIcon("C:\\Users\\Sudhir\\OneDrive\\Pictures\\Documents\\NetBeansProjects\\Hotel Management System\\src\\h.png"));
-        flag=0;
-        txtpassword.setEchoChar('*');
-         
-    }        // TODO add your handling code here:
+        URL iconUrl;
+        if(flag==0){
+           iconUrl = getClass().getResource("/image/s.png"); // Assuming s.png is in /image/
+           if (iconUrl != null) {
+               jLabel9.setIcon(new ImageIcon(iconUrl));
+           } else {
+               System.err.println("Couldn't find file: /image/s.png");
+               // Keep old icon or set text
+           }
+           flag=1;
+           txtpassword.setEchoChar((char)0);
+        }
+        else
+        {
+            iconUrl = getClass().getResource("/image/h.png"); // Assuming h.png is in /image/
+            if (iconUrl != null) {
+                jLabel9.setIcon(new ImageIcon(iconUrl));
+            } else {
+                System.err.println("Couldn't find file: /image/h.png");
+                // Keep old icon or set text
+            }
+            flag=0;
+            txtpassword.setEchoChar('*');
+        }
     }//GEN-LAST:event_jLabel9MouseClicked
 
     private void txtemailKeyReleased(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_txtemailKeyReleased

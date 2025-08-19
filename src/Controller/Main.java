@@ -1,6 +1,8 @@
 package Controller;
 
-import View.SignIn; // Ensure this import is present
+import View.SignIn; 
+import View.Signup;
+import View.PassWord;
 
 /**
  *
@@ -11,8 +13,6 @@ import View.SignIn; // Ensure this import is present
 
 public class Main {
     public static void main(String[] args) {
-        // Launch the SignIn GUI
-        // SwingUtilities.invokeLater for thread safety with Swing
         javax.swing.SwingUtilities.invokeLater(new Runnable() {
             public void run() {
                 SignIn signInFrame = new SignIn();
