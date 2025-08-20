@@ -1,69 +1,48 @@
 
-import com.mysql.cj.jdbc.result.ResultSetMetaData;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+package View;
+
+import Controller.ControllerManageRoom;
+import Model.ModelManageRoom;
+import java.util.LinkedList;
 import java.util.Vector;
 import javax.swing.JOptionPane;
+import javax.swing.JTable;
 import javax.swing.table.DefaultTableModel;
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
-
-/**
- *
- * @author Sudhir Kushwaha
- */
 public class ManageRoom extends javax.swing.JFrame {
     
-   String s2;
-     /**
-     * Creates new form ManageRoom
-     */
+    private ControllerManageRoom controller;
+    String s2;
+
     public ManageRoom() {
         initComponents();
-        s();
-        jButton3.setVisible(false);       
+        jButton3.setVisible(false);
     }
-    public void s(){
-    PreparedStatement pst=null;
-    Statement st=null;
-    ResultSet rs=null;
-    Connection con=null; 
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            con=DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel","root","Sudhir@123");
-            pst=con.prepareStatement("Select * from room");
-            rs=pst.executeQuery();
-            ResultSetMetaData stData=(ResultSetMetaData) rs.getMetaData();
-            //System.out.print(stData);
-            int q=stData.getColumnCount();
-            DefaultTableModel RecordTable= (DefaultTableModel) jTable1.getModel();
-            //System.out.print(RecordTable);
-            RecordTable.setRowCount(0);
-            while(rs.next()){
-                //Vector is like the dynamic array.
-                Vector columnData=new Vector();
-                for(int i=1;i<=q;i++){
-                    columnData.add(rs.getString("roomnumber"));
-                    columnData.add(rs.getString("roomtype"));
-                    columnData.add(rs.getString("bed"));
-                    columnData.add(rs.getString("price"));
-                    columnData.add(rs.getString("status"));
-                }
-                RecordTable.addRow(columnData);
-                //System.out.println(columnData);
 
-            }  
-        } catch (ClassNotFoundException | SQLException ex) {}                
+    public void setController(ControllerManageRoom controller) {
+        this.controller = controller;
     }
+
+    public JTable getjTable1() {
+        return jTable1;
+    }
+
+    public void populateTable(LinkedList<ModelManageRoom> rooms) {
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        model.setRowCount(0);
+        for (ModelManageRoom room : rooms) {
+            Vector<Object> row = new Vector<>();
+            row.add(room.getRoomnumber());
+            row.add(room.getRoomtype());
+            row.add(room.getBed());
+            row.add(room.getPrice());
+            row.add(room.getStatus());
+            model.addRow(row);
+        }
+    }
+    
     @SuppressWarnings("unchecked")
-    // <editor-fold defaultstate="collapsed" desc="Generated Code">//GEN-BEGIN:initComponents
+    // <editor-fold defaultstate="collapsed" desc="Generated Code">                          
     private void initComponents() {
 
         jLabel1 = new javax.swing.JLabel();
@@ -110,7 +89,7 @@ public class ManageRoom extends javax.swing.JFrame {
                 {null, null, null, null, null}
             },
             new String [] {
-                "Room Number", "Room Type", "Bed", "Pricce", "Status"
+                "Room Number", "Room Type", "Bed", "Price", "Status"
             }
         ) {
             boolean[] canEdit = new boolean [] {
@@ -162,11 +141,6 @@ public class ManageRoom extends javax.swing.JFrame {
         getContentPane().add(jLabel5, new org.netbeans.lib.awtextra.AbsoluteConstraints(580, 560, 396, 33));
 
         txtprice.setFont(new java.awt.Font("Tahoma", 1, 14)); // NOI18N
-        txtprice.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                txtpriceActionPerformed(evt);
-            }
-        });
         getContentPane().add(txtprice, new org.netbeans.lib.awtextra.AbsoluteConstraints(580, 610, 396, 35));
 
         jButton2.setBackground(new java.awt.Color(153, 0, 0));
@@ -200,187 +174,76 @@ public class ManageRoom extends javax.swing.JFrame {
         getContentPane().add(jLabel8, new org.netbeans.lib.awtextra.AbsoluteConstraints(0, 0, 1140, 770));
 
         pack();
-    }// </editor-fold>//GEN-END:initComponents
-    private void txtpriceActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_txtpriceActionPerformed
+    }// </editor-fold>                        
 
-    }//GEN-LAST:event_txtpriceActionPerformed
+    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        dispose();
+    }                                        
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-dispose(); 
-    }//GEN-LAST:event_jButton1ActionPerformed
-
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-    if(txtno.getText().equals("")){
-      JOptionPane.showMessageDialog(this, "All Field is Requied");
-      txtno.requestFocus();
-    }
-    else if(txtprice.getText().equals("")){
-       JOptionPane.showMessageDialog(this, "All Field is Requied");
-       txtprice.requestFocus();
-    }   
-    else{   
-        
-        PreparedStatement pst=null;
-        Statement st=null;
-        ResultSet rs=null;
+    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        String roomNumber = txtno.getText();
+        String priceStr = txtprice.getText();
+        if (roomNumber.equals("") || priceStr.equals("")) {
+            JOptionPane.showMessageDialog(this, "All Fields are Required");
+            return;
+        }
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            java.sql.Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel","root","Sudhir@123");
-           // st=con.createStatement(ResultSet.TYPE_SCROLL_SENSITIVE,ResultSet.CONCUR_READ_ONLY);
-            pst=con.prepareStatement("select * from room where roomnumber=?");
-            pst.setString(1, txtno.getText());
-            rs=pst.executeQuery();
-            if(rs.next()){
-                JOptionPane.showMessageDialog(this,"Room Number Already Exist");
-            }
-            else{
-                try{
-                    double pric=Double.parseDouble(txtprice.getText());
-                       
-                        try {
-                        Class.forName("com.mysql.cj.jdbc.Driver");
-                        con=DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel","root","Sudhir@123");
-                        pst=con.prepareStatement("insert into room(roomnumber,roomtype,bed,price,status)values(?,?,?,?,?)");
-                        pst.setString(1, txtno.getText());
-                        pst.setString(2, jComboBox1.getItemAt(jComboBox1.getSelectedIndex()));
-                        pst.setString(3, jComboBox2.getItemAt(jComboBox2.getSelectedIndex()));
-                        pst.setString(4, txtprice.getText());
-                        pst.setString(5, "Not Booked");                       
-                        pst.executeUpdate();
-                        JOptionPane.showMessageDialog(this, "Room Added");
-                        s();
-                        txtprice.setText("");
-                        txtno.setText("");
-                  
-                } catch (ClassNotFoundException | SQLException ex) {}
-                }catch(Exception e){
-                    JOptionPane.showMessageDialog(this,"Price is not valied");
-                    }
-                
-            }
-            
-        } catch (ClassNotFoundException | SQLException ex) {
-           //Logger.getLogger(Record.class.getName()).log(Level.SEVERE, null, ex);
+            double price = Double.parseDouble(priceStr);
+            String roomType = (String) jComboBox1.getSelectedItem();
+            String bed = (String) jComboBox2.getSelectedItem();
+            controller.addRoom(roomNumber, roomType, bed, price);
+            txtno.setText("");
+            txtprice.setText("");
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Price is not valid");
         }
-   
-    }    
-        
-    }//GEN-LAST:event_jButton2ActionPerformed
+    }                                        
 
-    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
-    if(evt.getClickCount()==2){
-        String check=JOptionPane.showInputDialog(this,"If you want to Delete this Record Write here to Delete\nIf you want to Update this Record then Write here update");
-        if(check.equalsIgnoreCase("delete")){
-            DefaultTableModel dmodel=(DefaultTableModel) jTable1.getModel();
-            int rows=jTable1.getSelectedRow();
-            s2=(String) dmodel.getValueAt(rows,0);
-            String s1=(String) dmodel.getValueAt(rows,4);
-            if(s1.equalsIgnoreCase("booked"))
-               JOptionPane.showMessageDialog(this,"Sorry Room is Booked So unable to delete it");
-            else{
-                PreparedStatement pst;
-                java.sql.Connection con;
-                try {
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel", "root", "Sudhir@123");
-                    pst = con.prepareStatement("delete from room where roomnumber=?");
-                    pst.setString(1,s2);
-                    pst.executeUpdate();
-                    s();
-                }
-                catch(Exception e){}               
+    private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {                                     
+        if (evt.getClickCount() == 2) {
+            String check = JOptionPane.showInputDialog(this, "If you want to Delete this Record Write here to Delete\nIf you want to Update this Record then Write here update");
+            if ("delete".equalsIgnoreCase(check)) {
+                int selectedRow = jTable1.getSelectedRow();
+                String roomNumber = (String) jTable1.getValueAt(selectedRow, 0);
+                controller.deleteRoom(roomNumber);
+            }
+            if ("update".equalsIgnoreCase(check)) {
+                // Logic to pre-fill fields for update
             }
         }
-        if(check.equalsIgnoreCase("update")){
-            DefaultTableModel dmodel=(DefaultTableModel) jTable1.getModel();
-            int rows=jTable1.getSelectedRow();
-            s2=(String) dmodel.getValueAt(rows,0);
-            String s1=(String) dmodel.getValueAt(rows,4);
-            String s3=(String) dmodel.getValueAt(rows,1);
-            String s4=(String) dmodel.getValueAt(rows,2);
-            String s5=(String) dmodel.getValueAt(rows,3);
-            if(s1.equalsIgnoreCase("booked"))
-               JOptionPane.showMessageDialog(this,"Sorry Room is Booked So unable to Update it");
-            else{
-                jButton3.setVisible(true);
-                jButton2.setVisible(false);
-                txtno.setText(s2);
-                txtprice.setText(s5);
-                txtno.setEditable(false);
-                txtno.setEditable(true);
-                
-            }
+    }                                    
+
+    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {                                         
+        String roomNumber = txtno.getText();
+        String priceStr = txtprice.getText();
+        if (priceStr.equals("")) {
+            JOptionPane.showMessageDialog(this, "Price is Required");
+            return;
         }
-        
+        try {
+            double price = Double.parseDouble(priceStr);
+            String roomType = (String) jComboBox1.getSelectedItem();
+            String bed = (String) jComboBox2.getSelectedItem();
+            controller.updateRoom(roomNumber, roomType, bed, price);
+            jButton2.setVisible(true);
+            jButton3.setVisible(false);
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Price is not valid");
+        }
     }
-    }//GEN-LAST:event_jTable1MouseClicked
-
-    private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-        
-        if(txtprice.getText().equals(""))
-            JOptionPane.showMessageDialog(this, "All Field id Required");
-        else{
-                String type=jComboBox1.getItemAt(jComboBox1.getSelectedIndex());
-                String bed=jComboBox2.getItemAt(jComboBox2.getSelectedIndex());
-                PreparedStatement pst;
-                java.sql.Connection con;
-                try {
-                    Class.forName("com.mysql.cj.jdbc.Driver");
-                    con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel", "root", "Sudhir@123");
-                    //pst=con.prepareStatement("update room set price="+txtprice.getText()+","+"roomtype="+type+" where roomnumber="+s2);
-                    pst=con.prepareStatement("update room set price=?,roomtype=?,bed=? where roomnumber=?");
-                    pst.setString(1,txtprice.getText() );
-                    pst.setString(2,type);
-                    pst.setString(3,bed);
-                    pst.setString(4,s2);
-                    pst.executeUpdate();
-                    JOptionPane.showMessageDialog(this, "Room Updated");
-                    s();
-                    jButton2.setVisible(true);
-                    jButton3.setVisible(false);
-                  
-                }catch(Exception e){
-                    
-                }
-                }        // TODO add your handling code here:
-    }//GEN-LAST:event_jButton3ActionPerformed
-
-    /**
-     * @param args the command line arguments
-     */
+    
     public static void main(String args[]) {
-        /* Set the Nimbus look and feel */
-        //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
-        /* If Nimbus (introduced in Java SE 6) is not available, stay with the default look and feel.
-         * For details see http://download.oracle.com/javase/tutorial/uiswing/lookandfeel/plaf.html 
-         */
-        try {
-            for (javax.swing.UIManager.LookAndFeelInfo info : javax.swing.UIManager.getInstalledLookAndFeels()) {
-                if ("Nimbus".equals(info.getName())) {
-                    javax.swing.UIManager.setLookAndFeel(info.getClassName());
-                    break;
-                }
-            }
-        } catch (ClassNotFoundException ex) {
-            java.util.logging.Logger.getLogger(ManageRoom.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (InstantiationException ex) {
-            java.util.logging.Logger.getLogger(ManageRoom.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (IllegalAccessException ex) {
-            java.util.logging.Logger.getLogger(ManageRoom.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        } catch (javax.swing.UnsupportedLookAndFeelException ex) {
-            java.util.logging.Logger.getLogger(ManageRoom.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
-        }
-        //</editor-fold>
-
-        /* Create and display the form */
         java.awt.EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new ManageRoom().setVisible(true);
+                ManageRoom view = new ManageRoom();
+                ControllerManageRoom controller = new ControllerManageRoom(view);
+                view.setController(controller);
+                view.setVisible(true);
             }
         });
     }
 
-    // Variables declaration - do not modify//GEN-BEGIN:variables
+    // Variables declaration - do not modify                     
     private javax.swing.JButton jButton1;
     private javax.swing.JButton jButton2;
     private javax.swing.JButton jButton3;
@@ -397,5 +260,5 @@ dispose();
     private javax.swing.JTable jTable1;
     private javax.swing.JTextField txtno;
     private javax.swing.JTextField txtprice;
-    // End of variables declaration//GEN-END:variables
+    // End of variables declaration                   
 }

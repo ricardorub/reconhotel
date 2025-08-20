@@ -1,5 +1,7 @@
 package View;
 
+import Controller.ControllerHome;
+import javax.swing.JButton;
 import javax.swing.JOptionPane;
 
 /*
@@ -18,6 +20,7 @@ public class Home extends javax.swing.JFrame {
      */
     public Home() {
         initComponents();
+        new ControllerHome(this);
     }
 
     /**
@@ -45,11 +48,6 @@ public class Home extends javax.swing.JFrame {
         jButton1.setForeground(new java.awt.Color(0, 0, 204));
         jButton1.setIcon(new javax.swing.ImageIcon(getClass().getResource("/image/manage.png"))); // NOI18N
         jButton1.setText("Manage Room");
-        jButton1.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton1ActionPerformed(evt);
-            }
-        });
         getContentPane().add(jButton1, new org.netbeans.lib.awtextra.AbsoluteConstraints(1140, 100, 220, -1));
 
         jButton2.setFont(new java.awt.Font("Segoe UI Symbol", 1, 14)); // NOI18N
@@ -124,10 +122,6 @@ int yes=JOptionPane.showConfirmDialog(this, "Are You Really Close This Applicati
         }       
     }//GEN-LAST:event_jButton6ActionPerformed
 
-    private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
- new ManageRoom().setVisible(true);
-    }//GEN-LAST:event_jButton1ActionPerformed
-
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
 new CustomerCheckIn().setVisible(true);
     }//GEN-LAST:event_jButton2ActionPerformed
@@ -184,4 +178,8 @@ new CustomerCheckOut().setVisible(true);
     private javax.swing.JButton jButton6;
     private javax.swing.JLabel jLabel1;
     // End of variables declaration//GEN-END:variables
+
+    public JButton getjButton1() {
+        return jButton1;
+    }
 }
