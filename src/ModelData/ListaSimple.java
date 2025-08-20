@@ -4,10 +4,29 @@
  */
 package ModelData;
 
-/**
- *
- * @author Lenovo
- */
 public class ListaSimple {
     
+    private Nodo head;
+
+    public ListaSimple() {
+        this.head = null;
+    }
+
+    public void insert(Object data) {
+        Nodo newNode = new Nodo(data);
+        if (head == null) {
+            head = newNode;
+        } else {
+            Nodo current = head;
+            while (current.getNext() != null) {
+                current = current.getNext();
+            }
+            current.setNext(newNode);
+        }
+    }
+
+    public Nodo getHead() {
+        return head;
+    }
 }
+

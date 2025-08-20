@@ -1,86 +1,30 @@
 
-import com.mysql.cj.jdbc.result.ResultSetMetaData;
-import java.beans.Statement;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.text.DateFormat;
+package View;
+
+import Controller.ControllerCustomerDetailsBill;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Vector;
 import javax.swing.JOptionPane;
 import javax.swing.table.DefaultTableModel;
 
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
-
-/**
- *
- * @author Sudhir Kushwaha
- */
 public class CustomerDetailsBill extends javax.swing.JFrame {
     static String idd;
-    /**
-     * Creates new form CustomerDetailsBill
-     */
+    private ControllerCustomerDetailsBill controller;
+
     public CustomerDetailsBill() {
         initComponents();
-        SimpleDateFormat d=new SimpleDateFormat("yyyy-MM-dd");
-        Date date=new Date();
+        controller = new ControllerCustomerDetailsBill();
+        SimpleDateFormat d = new SimpleDateFormat("yyyy-MM-dd");
+        Date date = new Date();
         txtdate.setText(d.format(date));
-        s();
+        loadInitialData();
     }
 
- public void s() {
+    private void loadInitialData() {
+        DefaultTableModel model = controller.getAllBills();
+        jTable1.setModel(model);
+    }
 
-        Statement st = null;
-        PreparedStatement pst = null;
-        ResultSet rs = null;
-        java.sql.Connection con = null;
-        int q, i;
-
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel", "root", "Sudhir@123");
-            pst = con.prepareStatement("Select * from customer where status=?");
-            pst.setString(1, "check out");
-            rs = pst.executeQuery();
-            ResultSetMetaData stData = (ResultSetMetaData) rs.getMetaData();
-            q = stData.getColumnCount();
-            DefaultTableModel RecordTable = (DefaultTableModel) jTable1.getModel();
-            RecordTable.setRowCount(0);
-            while (rs.next()) {
-                Vector columnData = new Vector();
-                for (i = 1; i <= q; i++) {
-                    columnData.add(rs.getString("billid"));
-                    columnData.add(rs.getString("roomnumber"));
-                    columnData.add(rs.getString("name"));
-                    columnData.add(rs.getString("mobile"));
-                    columnData.add(rs.getString("nationality"));
-                    columnData.add(rs.getString("gender"));
-                    columnData.add(rs.getString("email"));
-                    columnData.add(rs.getString("id"));
-                    columnData.add(rs.getString("address"));
-                    columnData.add(rs.getString("date"));
-                    columnData.add(rs.getString("outdate"));
-                    columnData.add(rs.getString("bed"));
-                    columnData.add(rs.getString("roomtype"));
-                    columnData.add(rs.getString("price"));
-                    columnData.add(rs.getString("days"));
-                    columnData.add(rs.getString("amount"));
-
-                }
-                RecordTable.addRow(columnData);
-            }
-        } catch (Exception e) {
-
-        }
-        
-        
-        
- }
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -143,23 +87,15 @@ public class CustomerDetailsBill extends javax.swing.JFrame {
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null},
-                {null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null}
+                {},
+                {},
+                {},
+                {}
             },
             new String [] {
-                "Bill ID", "Room Number", "Name", "Mobile Number", "Nationality", "Gender", "Email", "Adhar", "Address", "Check in Datel", "Ckeck out Date", "Bed", "Room Type", "Price", "Number of Days", "Total Amount"
-            }
-        ) {
-            boolean[] canEdit = new boolean [] {
-                false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false
-            };
 
-            public boolean isCellEditable(int rowIndex, int columnIndex) {
-                return canEdit [columnIndex];
             }
-        });
+        ));
         jTable1.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
                 jTable1MouseClicked(evt);
@@ -192,70 +128,32 @@ public class CustomerDetailsBill extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jButton1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton1ActionPerformed
-
-dispose();         // TODO add your handling code here:
+        dispose();
     }//GEN-LAST:event_jButton1ActionPerformed
 
     private void jTable1MouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_jTable1MouseClicked
-if(evt.getClickCount()==2){
-   
-    DefaultTableModel RecordTable= (DefaultTableModel) jTable1.getModel();
-    int SelectedRows=jTable1.getSelectedRow();
-    idd=((String) RecordTable.getValueAt(SelectedRows,0));
-     new GenerateBill().setVisible(true);
-}              
-        
+        if (evt.getClickCount() == 2) {
+            DefaultTableModel RecordTable = (DefaultTableModel) jTable1.getModel();
+            int SelectedRows = jTable1.getSelectedRow();
+            if (SelectedRows != -1) {
+                idd = (String) RecordTable.getValueAt(SelectedRows, 0);
+                // Assuming GenerateBill is a class that should be available
+                // new GenerateBill().setVisible(true);
+            }
+        }
     }//GEN-LAST:event_jTable1MouseClicked
 
     private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
- Statement st = null;
-        PreparedStatement pst = null;
-        ResultSet rs = null;
-        java.sql.Connection con = null;
-        int q, i;
-
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel", "root", "Sudhir@123");
-            pst = con.prepareStatement("Select * from customer where status=? AND outdate=?");
-            pst.setString(1, "check out");
-            pst.setString(2,txtdate.getText());
-            rs = pst.executeQuery();
-            ResultSetMetaData stData = (ResultSetMetaData) rs.getMetaData();
-            q = stData.getColumnCount();
-            DefaultTableModel RecordTable = (DefaultTableModel) jTable1.getModel();
-            RecordTable.setRowCount(0);
-            while (rs.next()) {
-                Vector columnData = new Vector();
-                for (i = 1; i <= q; i++) {
-                    columnData.add(rs.getString("billid"));
-                    columnData.add(rs.getString("roomnumber"));
-                    columnData.add(rs.getString("name"));
-                    columnData.add(rs.getString("mobile"));
-                    columnData.add(rs.getString("nationality"));
-                    columnData.add(rs.getString("gender"));
-                    columnData.add(rs.getString("email"));
-                    columnData.add(rs.getString("id"));
-                    columnData.add(rs.getString("address"));
-                    columnData.add(rs.getString("date"));
-                    columnData.add(rs.getString("outdate"));
-                    columnData.add(rs.getString("bed"));
-                    columnData.add(rs.getString("roomtype"));
-                    columnData.add(rs.getString("price"));
-                    columnData.add(rs.getString("days"));
-                    columnData.add(rs.getString("amount"));
-
-                }
-                RecordTable.addRow(columnData);
-            }
-        } catch (Exception e) {
-                JOptionPane.showMessageDialog(this,"Record Not Found.");
+        String date = txtdate.getText();
+        DefaultTableModel model = controller.searchBillsByDate(date);
+        jTable1.setModel(model);
+        if (model.getRowCount() == 0) {
+            JOptionPane.showMessageDialog(this, "Record Not Found.");
         }
-               // TODO add your handling code here:
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
-s();        // TODO add your handling code here:
+        loadInitialData();
     }//GEN-LAST:event_jButton3ActionPerformed
 
     /**
