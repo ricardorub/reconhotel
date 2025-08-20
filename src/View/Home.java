@@ -54,11 +54,6 @@ public class Home extends javax.swing.JFrame {
         jButton2.setForeground(new java.awt.Color(0, 0, 204));
         jButton2.setIcon(new javax.swing.ImageIcon(getClass().getResource("/image/checked.png"))); // NOI18N
         jButton2.setText("Customer Check In");
-        jButton2.addActionListener(new java.awt.event.ActionListener() {
-            public void actionPerformed(java.awt.event.ActionEvent evt) {
-                jButton2ActionPerformed(evt);
-            }
-        });
         getContentPane().add(jButton2, new org.netbeans.lib.awtextra.AbsoluteConstraints(1140, 230, 220, -1));
 
         jButton3.setFont(new java.awt.Font("Segoe UI Symbol", 1, 14)); // NOI18N
@@ -122,10 +117,6 @@ int yes=JOptionPane.showConfirmDialog(this, "Are You Really Close This Applicati
         }       
     }//GEN-LAST:event_jButton6ActionPerformed
 
-    private void jButton2ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton2ActionPerformed
-new CustomerCheckIn().setVisible(true);
-    }//GEN-LAST:event_jButton2ActionPerformed
-
     private void jButton3ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton3ActionPerformed
 new CustomerCheckOut().setVisible(true);
     }//GEN-LAST:event_jButton3ActionPerformed
@@ -181,5 +172,9 @@ new CustomerCheckOut().setVisible(true);
 
     public JButton getjButton1() {
         return jButton1;
+    }
+
+    public JButton getjButton2() {
+        return jButton2;
     }
 }
