@@ -32,7 +32,10 @@ public class ControllerHome implements ActionListener {
             view.setController(controller);
             view.setVisible(true);
         } else if (e.getSource() == homeView.getjButton3()) {
-            new CustomerCheckOut().setVisible(true);
+            CustomerCheckOut view = new CustomerCheckOut();
+            ControllerCustomerCheckOut controller = new ControllerCustomerCheckOut(view);
+            view.setController(controller);
+            view.setVisible(true);
         }
     }
 }
