@@ -1,4 +1,7 @@
+package View;
 
+import ModelData.ArbolBinario;
+import ModelData.Pila;
 import com.mysql.cj.jdbc.result.ResultSetMetaData;
 import java.beans.Statement;
 import java.sql.DriverManager;
@@ -24,6 +27,7 @@ import javax.swing.table.DefaultTableModel;
 public class CustomerCheckOut extends javax.swing.JFrame {
 int days;
 double pri;
+private static Pila checkoutStack = new Pila();
     /**
      * Creates new form CustomerCheckOut
      */
@@ -297,55 +301,91 @@ double pri;
         txtmobile.setText("");
         txtprice.setText("");
         txtdate.setText("");
-        PreparedStatement pst = null;
-        Statement st = null;
-        ResultSet rs = null;
-        try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            java.sql.Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel", "root", "Sudhir@123");
-            pst = con.prepareStatement("select name,mobile,email,date,price from customer where roomnumber=? AND status=?");
-            pst.setString(1, txtroomnumber.getText().trim());
-            pst.setString(2, "NULL");
-            rs = pst.executeQuery();
-            if (rs.next()) {
-                txtname.setText(rs.getString("name"));
-                txtemail.setText(rs.getString("email"));
-                txtmobile.setText(rs.getString("mobile"));
-                txtdate.setText(rs.getString("date"));
-                txtprice.setText(rs.getString("price"));
+
+        // Create and populate the binary tree
+        ArbolBinario roomTree = new ArbolBinario();
+        DefaultTableModel model = (DefaultTableModel) jTable1.getModel();
+        for (int i = 0; i < model.getRowCount(); i++) {
+            // Room number is in column 8
+            Object roomNumObj = model.getValueAt(i, 8);
+            if (roomNumObj != null) {
+                String roomNumStr = roomNumObj.toString();
+                if (!roomNumStr.trim().isEmpty()) {
+                    try {
+                        roomTree.insert(Integer.parseInt(roomNumStr.trim()));
+                    } catch (NumberFormatException e) {
+                        // Ignore if a room number is not a valid integer for some reason.
+                        System.err.println("Could not parse room number: " + roomNumStr);
+                    }
+                }
             }
-            
-            ZoneId z=ZoneId.of("Asia/Colombo");
-            LocalDate todays=LocalDate.now(z);
-            String s1=todays.toString();
-            SimpleDateFormat sim=new SimpleDateFormat("yyyy-MM-dd");
-            String f1=rs.getString("date");
-            String f2=s1;
-            try{
-                Date d1=sim.parse(f1);
-                Date d2=sim.parse(f2);
-                long diff=d2.getTime()-d1.getTime();
-                int days=(int)(diff/(1000*24*60*60));
-                if(days==0)
-                    txtamount.setText("1");
-                else
-                    txtdays.setText(String.valueOf(days));
-                double p=Double.parseDouble(rs.getString("price"));
-                double pri=days*p;
-                if(days==0)
-                    txtamount.setText(String.valueOf(p));
-                else
-                    txtamount.setText(String.valueOf(pri));
-            }catch(Exception e){
-            }  
-        } catch (ClassNotFoundException | SQLException ex) {
-           txtdays.setText("");
-            txtamount.setText("");
-             JOptionPane.showMessageDialog(this,"Record Not Found.");
-            
-            //Logger.getLogger(CustomerCheckOut.class.getName()).log(Level.SEVERE, null, ex);
         }
 
+        // Search the tree
+        String searchRoomNumStr = txtroomnumber.getText().trim();
+        if (searchRoomNumStr.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "Please enter a room number.");
+            return;
+        }
+
+        try {
+            int searchRoomNum = Integer.parseInt(searchRoomNumStr);
+            if (roomTree.search(searchRoomNum) != null) {
+                // Room found in tree, now get details from DB
+                PreparedStatement pst = null;
+                ResultSet rs = null;
+                java.sql.Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel", "root", "Sudhir@123");
+                pst = con.prepareStatement("select name,mobile,email,date,price from customer where roomnumber=? AND status=?");
+                pst.setString(1, searchRoomNumStr);
+                pst.setString(2, "NULL");
+                rs = pst.executeQuery();
+                if (rs.next()) {
+                    txtname.setText(rs.getString("name"));
+                    txtemail.setText(rs.getString("email"));
+                    txtmobile.setText(rs.getString("mobile"));
+                    txtdate.setText(rs.getString("date"));
+                    txtprice.setText(rs.getString("price"));
+                }
+
+                ZoneId z = ZoneId.of("Asia/Colombo");
+                LocalDate todays = LocalDate.now(z);
+                String s1 = todays.toString();
+                SimpleDateFormat sim = new SimpleDateFormat("yyyy-MM-dd");
+                String f1 = rs.getString("date");
+                String f2 = s1;
+                try {
+                    Date d1 = sim.parse(f1);
+                    Date d2 = sim.parse(f2);
+                    long diff = d2.getTime() - d1.getTime();
+                    int days = (int) (diff / (1000 * 24 * 60 * 60));
+                    if (days == 0) {
+                        txtdays.setText("1");
+                    } else {
+                        txtdays.setText(String.valueOf(days));
+                    }
+                    double p = Double.parseDouble(rs.getString("price"));
+                    double pri = days * p;
+                    if (days == 0) {
+                        txtamount.setText(String.valueOf(p));
+                    } else {
+                        txtamount.setText(String.valueOf(pri));
+                    }
+                } catch (Exception e) {
+                    // ignore date parsing errors
+                }
+            } else {
+                // Room not found in tree
+                txtdays.setText("");
+                txtamount.setText("");
+                JOptionPane.showMessageDialog(this, "Record Not Found.");
+            }
+        } catch (NumberFormatException e) {
+            JOptionPane.showMessageDialog(this, "Invalid room number format.");
+        } catch (SQLException ex) {
+            txtdays.setText("");
+            txtamount.setText("");
+            JOptionPane.showMessageDialog(this, "Database error: " + ex.getMessage());
+        }
     }//GEN-LAST:event_jButton2ActionPerformed
 
     private void jButton4ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jButton4ActionPerformed
@@ -406,6 +446,10 @@ double pri;
         if (txtname.getText().equals("")) {
             JOptionPane.showMessageDialog(this, "Please Enter Room Number And Search it,Then Check Out Customer");
         } else {
+            String checkoutDetails = "Name: " + txtname.getText() + ", Room: " + txtroomnumber.getText() + ", Amount: " + txtamount.getText();
+            checkoutStack.push(checkoutDetails);
+            System.out.println("Pushed to stack: " + checkoutDetails); // For debugging
+            
             try {
                 PreparedStatement pst = null;
                 Class.forName("com.mysql.cj.jdbc.Driver");

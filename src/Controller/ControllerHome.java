@@ -4,6 +4,7 @@ import View.Home;
 import View.ManageRoom;
 import Controller.ControllerManageRoom;
 import View.CustomerCheckIn;
+import View.CustomerCheckOut;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
@@ -15,6 +16,7 @@ public class ControllerHome implements ActionListener {
         this.homeView = homeView;
         this.homeView.getjButton1().addActionListener(this);
         this.homeView.getjButton2().addActionListener(this);
+        this.homeView.getjButton3().addActionListener(this);
     }
 
     @Override
@@ -29,6 +31,8 @@ public class ControllerHome implements ActionListener {
             ControllerCustomerCheckIn controller = new ControllerCustomerCheckIn(view);
             view.setController(controller);
             view.setVisible(true);
+        } else if (e.getSource() == homeView.getjButton3()) {
+            new CustomerCheckOut().setVisible(true);
         }
     }
 }
