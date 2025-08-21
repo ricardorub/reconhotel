@@ -26,7 +26,7 @@ public class ControllerCustomerDetailsBill {
         ResultSet rs = null;
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
-            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel", "root", "Sudhir@123");
+            con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hoteljava", "root", "root");
             pst = con.prepareStatement("SELECT * FROM customer WHERE status=?");
             pst.setString(1, "check out");
             rs = pst.executeQuery();
@@ -114,4 +114,3 @@ public class ControllerCustomerDetailsBill {
         return model;
     }
 }
-

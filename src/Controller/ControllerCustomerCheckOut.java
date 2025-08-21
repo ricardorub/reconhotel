@@ -2,7 +2,7 @@ package Controller;
 
 import ModelData.ArbolBinario;
 import View.CustomerCheckOut;
-//import View.CustomerDetailsBill;
+import View.CustomerDetailsBill;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
@@ -192,7 +192,7 @@ public class ControllerCustomerCheckOut implements ActionListener, MouseListener
 
                 int yes = JOptionPane.showConfirmDialog(view, "Check out Successfully.\nDo you want to see & print bill?", "Check outed", JOptionPane.YES_NO_OPTION);
                 if (JOptionPane.YES_OPTION == yes) {
-                   // new CustomerDetailsBill().setVisible(true);
+                   new CustomerDetailsBill().setVisible(true);
                 } else {
                     refreshTableData();
                     clearFields();
