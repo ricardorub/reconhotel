@@ -1,6 +1,8 @@
 
+package View;
+
+import DbConnection.DbConnection;
 import java.awt.print.PrinterException;
-import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -58,9 +60,8 @@ public class GenerateBill extends javax.swing.JFrame {
     public void connect(){
         PreparedStatement pst;
         ResultSet rs;
+        java.sql.Connection con = DbConnection.conectar();
         try {
-            Class.forName("com.mysql.cj.jdbc.Driver");
-            java.sql.Connection con=DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel","root","Sudhir@123");
             pst=con.prepareStatement("select * from customer where billid=?");
             pst.setString(1,id);
             rs=pst.executeQuery();
@@ -79,8 +80,14 @@ public class GenerateBill extends javax.swing.JFrame {
    
             }
         
-        } catch (ClassNotFoundException | SQLException ex) {
+        } catch (SQLException ex) {
             Logger.getLogger(GenerateBill.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            try {
+                if (con != null) con.close();
+            } catch (SQLException ex) {
+                Logger.getLogger(GenerateBill.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
     /**

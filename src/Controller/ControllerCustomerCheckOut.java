@@ -114,7 +114,7 @@ public class ControllerCustomerCheckOut implements ActionListener, MouseListener
                 PreparedStatement pst = null;
                 ResultSet rs = null;
                 java.sql.Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hoteljava", "root", "root");
-                pst = con.prepareStatement("select name,mobile,email,date,price from customer where roomnumber=? AND status=?");
+                pst = con.prepareStatement("select name,mobile,email,date from customer where roomnumber=? AND status=?");
                 pst.setString(1, searchRoomNumStr);
                 pst.setString(2, "NULL");
                 rs = pst.executeQuery();
@@ -123,7 +123,15 @@ public class ControllerCustomerCheckOut implements ActionListener, MouseListener
                     view.getTxtEmail().setText(rs.getString("email"));
                     view.getTxtMobile().setText(rs.getString("mobile"));
                     view.getTxtDate().setText(rs.getString("date"));
-                    view.getTxtPrice().setText(rs.getString("price"));
+                    
+                    String price = "0";
+                    PreparedStatement pstPrice = con.prepareStatement("select price from room where roomnumber=?");
+                    pstPrice.setString(1, searchRoomNumStr);
+                    ResultSet rsPrice = pstPrice.executeQuery();
+                    if(rsPrice.next()){
+                        price = rsPrice.getString("price");
+                        view.getTxtPrice().setText(price);
+                    }
 
                     ZoneId z = ZoneId.of("Asia/Colombo");
                     LocalDate todays = LocalDate.now(z);
@@ -141,7 +149,7 @@ public class ControllerCustomerCheckOut implements ActionListener, MouseListener
                         }
                         view.getTxtDays().setText(String.valueOf(days));
                         
-                        double p = Double.parseDouble(rs.getString("price"));
+                        double p = Double.parseDouble(price);
                         double pri = days * p;
                         view.getTxtAmount().setText(String.valueOf(pri));
                     } catch (Exception ex) {
@@ -178,12 +186,14 @@ public class ControllerCustomerCheckOut implements ActionListener, MouseListener
                 pst.setString(1, "check out");
                 pst.setString(2, view.getTxtRoomNumber().getText());
                 pst.executeUpdate();
-                pst = con.prepareStatement("update customer set amount=?,outdate=?,days=? where roomnumber=? AND date=?");
+                String billId = view.getTxtRoomNumber().getText() + new java.util.Random().nextInt(9999);
+                pst = con.prepareStatement("update customer set amount=?,outdate=?,days=?,billid=? where roomnumber=? AND date=?");
                 pst.setString(1, view.getTxtAmount().getText());
                 pst.setString(2, view.getTxtOutDate().getText());
                 pst.setString(3, view.getTxtDays().getText());
-                pst.setString(4, view.getTxtRoomNumber().getText());
-                pst.setString(5, view.getTxtDate().getText());
+                pst.setString(4, billId);
+                pst.setString(5, view.getTxtRoomNumber().getText());
+                pst.setString(6, view.getTxtDate().getText());
                 pst.executeUpdate();
                 pst = con.prepareStatement("update room set status=? where roomnumber=?");
                 pst.setString(1, "Not Booked");
@@ -225,7 +235,20 @@ public class ControllerCustomerCheckOut implements ActionListener, MouseListener
             view.getTxtEmail().setText(model.getValueAt(selectedRow, 2).toString());
             view.getTxtDate().setText(model.getValueAt(selectedRow, 3).toString());
             view.getTxtRoomNumber().setText(model.getValueAt(selectedRow, 8).toString());
-            view.getTxtPrice().setText(model.getValueAt(selectedRow, 11).toString());
+            
+            String price = "0";
+            try {
+                java.sql.Connection con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hoteljava", "root", "root");
+                PreparedStatement pstPrice = con.prepareStatement("select price from room where roomnumber=?");
+                pstPrice.setString(1, view.getTxtRoomNumber().getText());
+                ResultSet rsPrice = pstPrice.executeQuery();
+                if(rsPrice.next()){
+                    price = rsPrice.getString("price");
+                    view.getTxtPrice().setText(price);
+                }
+            } catch (SQLException ex) {
+                // ignore
+            }
             
             ZoneId z = ZoneId.of("Asia/Colombo");
             LocalDate todays = LocalDate.now(z);
@@ -243,7 +266,7 @@ public class ControllerCustomerCheckOut implements ActionListener, MouseListener
                 }
                 view.getTxtDays().setText(String.valueOf(days));
                 
-                double p = Double.parseDouble(model.getValueAt(selectedRow, 11).toString());
+                double p = Double.parseDouble(price);
                 double pri = days * p;
                 view.getTxtAmount().setText(String.valueOf(pri));
             } catch (Exception ex) {

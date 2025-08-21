@@ -1,4 +1,5 @@
 
+
 package View;
 
 import Controller.ControllerCustomerDetailsBill;
@@ -138,7 +139,7 @@ public class CustomerDetailsBill extends javax.swing.JFrame {
             if (SelectedRows != -1) {
                 idd = (String) RecordTable.getValueAt(SelectedRows, 0);
                 // Assuming GenerateBill is a class that should be available
-                // new GenerateBill().setVisible(true);
+                new GenerateBill().setVisible(true);
             }
         }
     }//GEN-LAST:event_jTable1MouseClicked
